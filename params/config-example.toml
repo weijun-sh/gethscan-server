@@ -1,0 +1,14 @@
+# modgodb database connection config (server only)
+[Server.MongoDB]
+DBURL = "localhost:27017"
+DBName = "testdb"
+UserName = "tester"
+Password = "test123456"
+
+# bridge API service (server only)
+[Server.APIServer]
+# listen port
+Port = 11556
+# CORS config
+AllowedOrigins = []
+
