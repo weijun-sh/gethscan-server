@@ -223,7 +223,6 @@ func RegisterSwapPendingHandler(w http.ResponseWriter, r *http.Request) {
 	chain := vars["chain"]
 	txid := vars["txid"]
 	token := vars["token"]
-	fmt.Printf("RegisterSwapPendingHandler, chain: %v, txid: %v, token: %v\n", chain, txid, token)
 	res, err := swapapi.RegisterSwapPending(chain, token, txid)
 	writeResponse(w, res, err)
 }
@@ -235,7 +234,6 @@ func RegisterSwapHandler(w http.ResponseWriter, r *http.Request) {
 	txid := vars["txid"]
 	method := vars["method"]
 	swapServer := vars["swapserver"]
-	fmt.Printf("RegisterSwapHandler, pairid: %v, txid: %v, method: %v, swapServer: %v\n", pairid, txid, method, swapServer)
 	res, err := swapapi.RegisterSwap(method, pairid, txid, swapServer)
 	writeResponse(w, res, err)
 }

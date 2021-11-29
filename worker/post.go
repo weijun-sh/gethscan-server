@@ -58,8 +58,8 @@ func findSwapAndPost() {
 	for _, p := range post {
 		ok := postBridgeSwap(p)
 		if ok == nil {
-			mongodb.RemoveRegisteredSwap(p.Key)
 			mongodb.AddSwapPost(p)
+			mongodb.RemoveRegisteredSwap(p.Key)
 		}
 	}
 }

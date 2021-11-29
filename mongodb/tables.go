@@ -21,10 +21,10 @@ const (
 	keyOfSrcLatestScanInfo string = "srclatest"
 	keyOfDstLatestScanInfo string = "dstlatest"
 
-	tbSwapPost              string = "SwapPost"
-	tbRegisteredSwap        string = "RegisteredSwap"
-	tbRegisteredSwapPending string = "RegisteredSwapPending"
-	tbSwapDelete            string = "SwapDelete"
+	tbSwapPost              string = "swapPost"
+	tbRegisteredSwap        string = "swapRegistered"
+	tbRegisteredSwapPending string = "swapPending"
+	tbSwapDelete            string = "swapDeleted"
 )
 
 // MgoSwap registered swap

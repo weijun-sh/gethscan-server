@@ -10,5 +10,7 @@ Password = "test123456"
 # listen port
 Port = 11556
 # CORS config
-AllowedOrigins = []
+AllowedOrigins = ["*"]
 
+[Extra]
+MustRegisterAccount = true
