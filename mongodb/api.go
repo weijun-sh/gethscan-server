@@ -764,7 +764,7 @@ func AddRegisteredSwap(method, pairid, txid, swapServer string) error {
 	if err == nil {
 		log.Info("mongodb add register swap", "key", ma.Key)
 	} else {
-		log.Debug("mongodb add register swap", "key", ma.Key, "err", err)
+		log.Info("mongodb add register swap", "key", ma.Key, "err", err)
 	}
 	return mgoError(err)
 }
@@ -775,7 +775,7 @@ func RemoveRegisteredSwap(id string) error {
 	if err == nil {
 		log.Info("mongodb remove register swap", "key", id)
 	} else {
-		log.Debug("mongodb remove register swap", "key", id, "err", err)
+		log.Info("mongodb remove register swap", "key", id, "err", err)
 	}
 	return mgoError(err)
 }
@@ -796,7 +796,7 @@ func AddSwapPost(post *MgoRegisteredSwap) error {
 	if err == nil {
 		log.Info("mongodb add swap post", "key", ma.Key)
 	} else {
-		log.Debug("mongodb add swap post", "key", ma.Key, "err", err)
+		log.Info("mongodb add swap post", "key", ma.Key, "err", err)
 	}
 	return mgoError(err)
 }
