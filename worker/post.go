@@ -56,10 +56,10 @@ func findSwapAndPost() {
                return
 	}
 	for _, p := range post {
-		ok := postBridgeSwap(p.Method, p.PairID, p.Key, p.SwapServer)
+		ok := postBridgeSwap(p)
 		if ok == nil {
-			//updateBridgeSwap(p.Method, p.PairID, p.Key, p.SwapServer)
-			mongodb.AddSwapPost(p.Method, p.PairID, p.Key, p.SwapServer)
+			mongodb.RemoveRegisteredSwap(p.Key)
+			mongodb.AddSwapPost(p)
 		}
 	}
 }
@@ -78,15 +78,15 @@ type swapPost struct {
 	logIndex string
 }
 
-func postBridgeSwap(method, pairID, txid, swapServer string) error {
+func postBridgeSwap(post *mongodb.MgoRegisteredSwap) error {
 	//rpcMethod = "swap.Swapin"
 	//rpcMethod = "swap.Swapout"
-	log.Info("postBridgeSwap", "txid", txid, "pairID", pairID, "method", method, "rpc", swapServer)
+	log.Info("postBridgeSwap", "txid", post.Key, "pairID", post.PairID, "method", post.Method, "rpc", post.SwapServer)
 	swap := &swapPost{
-		txid:       txid,
-		pairID:     pairID,
-		rpcMethod:  method,
-		swapServer: swapServer,
+		txid:       post.Key,
+		pairID:     post.PairID,
+		rpcMethod:  post.Method,
+		swapServer: post.SwapServer,
 	}
 	return postSwapPost(swap)
 }
@@ -99,6 +99,7 @@ func postSwapPost(swap *swapPost) error {
 		if err == nil {
 			return nil
 		}
+		log.Warn("postSwapPost", "err", err)
 		if errors.Is(err, tokens.ErrTxNotFound) ||
 			strings.Contains(err.Error(), httpTimeoutKeywords) ||
 			strings.Contains(err.Error(), errConnectionRefused) {

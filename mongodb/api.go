@@ -748,7 +748,7 @@ func AddRegisteredSwapPending(chain, token, txid string) error {
 	return mgoError(err)
 }
 
-// AddRegisteredSwap add register swap tx
+// AddRegisteredSwap add register swap
 func AddRegisteredSwap(method, pairid, txid, swapServer string) error {
 	now := time.Now()
 	ma := &MgoRegisteredSwap{
@@ -762,26 +762,36 @@ func AddRegisteredSwap(method, pairid, txid, swapServer string) error {
 	}
 	err := collRegisteredSwap.Insert(ma)
 	if err == nil {
-		log.Info("mongodb add register swaptx", "key", ma.Key)
+		log.Info("mongodb add register swap", "key", ma.Key)
 	} else {
-		log.Debug("mongodb add register swaptx", "key", ma.Key, "err", err)
+		log.Debug("mongodb add register swap", "key", ma.Key, "err", err)
+	}
+	return mgoError(err)
+}
+
+// RemoveRegisteredSwap add register swap
+func RemoveRegisteredSwap(id string) error {
+	err := collRegisteredSwap.Remove(bson.M{"_id": id})
+	if err == nil {
+		log.Info("mongodb remove register swap", "key", id)
+	} else {
+		log.Debug("mongodb remove register swap", "key", id, "err", err)
 	}
 	return mgoError(err)
 }
 
 // AddSwapPost add swap post success
-func AddSwapPost(method, pairid, txid, swapServer string) error {
+func AddSwapPost(post *MgoRegisteredSwap) error {
 	now := time.Now()
 	ma := &MgoRegisteredSwap{
-		Key:        txid,
-		PairID:     pairid,
-		Method:     method,
-		SwapServer: swapServer,
+		Key:        post.Key,
+		PairID:     post.PairID,
+		Method:     post.Method,
+		SwapServer: post.SwapServer,
 		Status:     SwapSuccess,
 		Timestamp:  now.Unix(),
 		Date:       fmt.Sprintf(now.Format("2006-01-02 15:04:00")),
 	}
-	fmt.Printf("AddSwapPost, NewRegister: %v, SwapSuccess: %v\n", NewRegister, SwapSuccess)
 	err := collSwapPost.Insert(ma)
 	if err == nil {
 		log.Info("mongodb add swap post", "key", ma.Key)

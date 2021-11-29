@@ -22,6 +22,7 @@ require (
 	github.com/gorilla/rpc v1.2.0
 	github.com/jordan-wright/email v0.0.0-20200917010138-e1c00e156980
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
+	github.com/lestrrat-go/strftime v1.0.5 // indirect
 	github.com/ltcsuite/ltcd v0.20.1-beta
 	github.com/ltcsuite/ltcutil v1.0.2-beta
 	github.com/ltcsuite/ltcwallet/wallet/txauthor v1.0.0
@@ -34,7 +35,6 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20200815110645-5c35d600f0ca
 	github.com/tendermint/go-amino v0.16.0
 	github.com/urfave/cli/v2 v2.3.0
-	github.com/weijun-sh/gethscan v0.0.0-20211119061133-dc4bfc3dfe7c
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 )
