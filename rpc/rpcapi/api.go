@@ -69,32 +69,69 @@ func (s *RPCAPI) GetSwapStatistics(r *http.Request, pairID *string, result *swap
 	return err
 }
 
-// RPCPairidTxTokenSwapserverArgs pairid, txid, pairID and swapServer
-type RPCPairidTxTokenSwapserverArgs struct {
+// RPCPairidTxSwapserverArgs pairid, txid, pairID and swapServer
+type RPCPairidTxSwapserverArgs struct {
 	Method string `json: "method"`
 	PairID string `json:"pairid"`
 	TxID  string `json:"txid"`
+	Chain string `json: "chain"`
 	SwapServer string `json:"swapServer"`
 }
 
-func (args *RPCPairidTxTokenSwapserverArgs) getPairidTokenTxSwapserver() (method, pairid, txid, swapServer *string, err error) {
+func (args *RPCPairidTxSwapserverArgs) getPairidTxSwapserver() (chain, method, pairid, txid, swapServer *string, err error) {
+	chain = &args.Chain
 	method = &args.Method
 	pairid = &args.PairID
 	txid = &args.TxID
 	swapServer = &args.SwapServer
 	if *method == "" {
-		return nil, nil, nil, nil, errors.New("empty method")
+		return nil, nil, nil, nil, nil, errors.New("empty method")
 	}
 	if *pairid == "" {
-		return nil, nil, nil, nil, errors.New("empty pairid")
+		return nil, nil, nil, nil, nil, errors.New("empty pairid")
 	}
 	if *txid == "" {
-		return nil, nil, nil, nil, errors.New("empty tx id")
+		return nil, nil, nil, nil, nil, errors.New("empty tx id")
 	}
 	if *swapServer == "" {
-		return nil, nil, nil, nil, errors.New("empty server rpc")
+		return nil, nil, nil, nil, nil, errors.New("empty server rpc")
 	}
-	return method, pairid, txid, swapServer, nil
+	return chain, method, pairid, txid, swapServer, nil
+}
+
+// RPCChainidTxSwapserverArgs pairid, txid, pairID and swapServer
+type RPCChainidTxSwapserverArgs struct {
+	Method string `json: "method"`
+	ChainID string `json:"chainid"`
+	TxID  string `json:"txid"`
+	LogIndex string `json:"logIndex"`
+	Chain string `json: "chain"`
+	SwapServer string `json:"swapServer"`
+}
+
+func (args *RPCChainidTxSwapserverArgs) getChainidTxSwapserver() (chain, method, chainid, txid, logIndex, swapServer *string, err error) {
+	chain = &args.Chain
+	method = &args.Method
+	chainid = &args.ChainID
+	txid = &args.TxID
+	logIndex = &args.LogIndex
+	swapServer = &args.SwapServer
+	if *method == "" {
+		return nil, nil, nil, nil, nil, nil, errors.New("empty method")
+	}
+	if *chainid == "" {
+		return nil, nil, nil, nil, nil, nil, errors.New("empty chainid")
+	}
+	if *txid == "" {
+		return nil, nil, nil, nil, nil, nil, errors.New("empty tx id")
+	}
+	if *logIndex == "" {
+		return nil, nil, nil, nil, nil, nil, errors.New("empty logIndex id")
+	}
+	if *swapServer == "" {
+		return nil, nil, nil, nil, nil, nil, errors.New("empty server rpc")
+	}
+	return chain, method, chainid, txid, logIndex, swapServer, nil
 }
 
 // RPCChainTxAndTokenArgs txid and pairID
@@ -339,12 +376,25 @@ func (s *RPCAPI) GetLatestScanInfo(r *http.Request, isSrc *bool, result *swapapi
 }
 
 // RegisterSwap api
-func (s *RPCAPI) RegisterSwap(r *http.Request,  args *RPCPairidTxTokenSwapserverArgs, result *swapapi.PostResult) error {
-	method, pairid, txid, swapServer, err := args.getPairidTokenTxSwapserver()
+func (s *RPCAPI) RegisterSwap(r *http.Request,  args *RPCPairidTxSwapserverArgs, result *swapapi.PostResult) error {
+	chain, method, pairid, txid, swapServer, err := args.getPairidTxSwapserver()
 	if err != nil {
 		return err
 	}
-	res, err := swapapi.RegisterSwap(*method, *pairid, *txid, *swapServer)
+	res, err := swapapi.RegisterSwap(*chain, *method, *pairid, *txid, *swapServer)
+	if err == nil && res != nil {
+		*result = *res
+	}
+	return err
+}
+
+// RegisterSwapRouter api
+func (s *RPCAPI) RegisterSwapRouter(r *http.Request,  args *RPCChainidTxSwapserverArgs, result *swapapi.PostResult) error {
+	chain, method, chainid, txid, logIndex, swapServer, err := args.getChainidTxSwapserver()
+	if err != nil {
+		return err
+	}
+	res, err := swapapi.RegisterSwapRouter(*chain, *method, *chainid, *txid, *logIndex, *swapServer)
 	if err == nil && res != nil {
 		*result = *res
 	}

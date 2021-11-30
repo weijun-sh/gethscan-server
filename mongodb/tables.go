@@ -23,6 +23,7 @@ const (
 
 	tbSwapPost              string = "swapPost"
 	tbRegisteredSwap        string = "swapRegistered"
+	tbRegisteredSwapRouter  string = "swapRegisteredRouter"
 	tbRegisteredSwapPending string = "swapPending"
 	tbSwapDelete            string = "swapDeleted"
 )
@@ -91,23 +92,26 @@ type MgoP2shAddress struct {
 // MgoRegisteredSwap key is address (in whitelist)
 type MgoRegisteredSwap struct {
 	Key        string `bson:"_id"`
-	PairID     string `bson: "pairID"`
-	Method     string `bson: "method"`
-	SwapServer string `bson: "swapServer"`
-	Status     uint8  `bson: "status"`
+	PairID     string `bson:"pairID"`
+	Method     string `bson:"method"`
+	LogIndex   string `bson:"logIndex"`
+	SwapServer string `bson:"swapServer"`
+	Chain      string `bson:"chain"`
+	ChainID    string `bson:"chainid"`
+	Status     uint8  `bson:"status"`
 	Timestamp  int64  `bson:"timestamp"`
-	Date       string `bson: "data"`
+	Date       string `bson:"data"`
 }
 
 // MgoRegisteredSwapPending key is address (in whitelist)
 type MgoRegisteredSwapPending struct {
-	Key        string `bson: "_id"`
-	Chain      string `bson: "chain"`
-	Token      string `bson: "token"`
-	Post       bool   `bson: "post"`
-	Status     uint8  `bson: "status"`
-	Timestamp  int64  `bson: "timestamp"`
-	Date       string `bson: "data"`
+	Key        string `bson:"_id"`
+	Chain      string `bson:"chain"`
+	Token      string `bson:"token"`
+	Post       bool   `bson:"post"`
+	Status     uint8  `bson:"status"`
+	Timestamp  int64  `bson:"timestamp"`
+	Date       string `bson:"data"`
 }
 
 // MgoRegisteredAddress key is address (in whitelist)

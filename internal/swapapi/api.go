@@ -395,19 +395,39 @@ func RegisterSwapPending(chain, token, txid string) (*PostResult, error) {
 }
 
 // RegisterSwap register Swap for ETH like chain
-func RegisterSwap(method, pairid, txid, swapServer string) (*PostResult, error) {
+func RegisterSwap(chain, method, pairid, txid, swapServer string) (*PostResult, error) {
 	if !params.MustRegisterAccount() {
 		return &SuccessPostResult, nil
 	}
+	chain = strings.ToLower(chain)
 	//method = strings.ToLower(method)
 	pairid = strings.ToLower(pairid)
 	txid = strings.ToLower(txid)
 	swapServer = strings.ToLower(swapServer)
-	err := mongodb.AddRegisteredSwap(method, pairid, txid, swapServer)
+	err := mongodb.AddRegisteredSwap(chain, method, pairid, txid, swapServer)
 	if err != nil {
 		return nil, err
 	}
 	log.Info("[api] register swap", "pairid", pairid, "method", method, "txid", txid, "swapServer", swapServer)
+	return &SuccessPostResult, nil
+}
+
+// RegisterSwapRouter register Swap for ETH like chain
+func RegisterSwapRouter(chain, method, chainid, txid, logIndex, swapServer string) (*PostResult, error) {
+	if !params.MustRegisterAccount() {
+		return &SuccessPostResult, nil
+	}
+	chain = strings.ToLower(chain)
+	//method = strings.ToLower(method)
+	chainid = strings.ToLower(chainid)
+	txid = strings.ToLower(txid)
+	logIndex = strings.ToLower(logIndex)
+	swapServer = strings.ToLower(swapServer)
+	err := mongodb.AddRegisteredSwapRouter(chain, method, chainid, txid, logIndex, swapServer)
+	if err != nil {
+		return nil, err
+	}
+	log.Info("[api] register swap router", "chainid", chainid, "method", method, "txid", txid, "logIndex", logIndex, "swapServer", swapServer)
 	return &SuccessPostResult, nil
 }
 

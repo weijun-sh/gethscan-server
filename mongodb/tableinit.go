@@ -19,6 +19,7 @@ var (
 	collUsedRValue        *mgo.Collection
 
 	collRegisteredSwap        *mgo.Collection
+	//collRegisteredSwapRouter  *mgo.Collection
 	collRegisteredSwapPending *mgo.Collection
 	collSwapPost              *mgo.Collection
 	collSwapDelete            *mgo.Collection
@@ -44,7 +45,9 @@ func deinintCollections() {
 	//collUsedRValue = database.C(tbUsedRValues)
 
 	collRegisteredSwap = database.C(tbRegisteredSwap)
+	//collRegisteredSwapRouter = database.C(tbRegisteredSwapRouter)
 	collRegisteredSwapPending = database.C(tbRegisteredSwapPending)
+
 	collSwapPost = database.C(tbSwapPost)
 	collSwapDelete = database.C(tbSwapDelete)
 }
@@ -63,10 +66,11 @@ func initCollections() {
 	//initCollection(tbSwapHistory, &collSwapHistory, "txid")
 	//initCollection(tbUsedRValues, &collUsedRValue)
 
-	initCollection(tbRegisteredSwap, &collRegisteredSwap)
-	initCollection(tbRegisteredSwapPending, &collRegisteredSwapPending)
-	initCollection(tbSwapPost, &collSwapPost)
-	initCollection(tbSwapDelete, &collSwapDelete)
+	initCollection(tbRegisteredSwap, &collRegisteredSwap, "txid")
+	//initCollection(tbRegisteredSwapRouter, &collRegisteredSwapRouter, "txid")
+	initCollection(tbRegisteredSwapPending, &collRegisteredSwapPending, "txid")
+	initCollection(tbSwapPost, &collSwapPost, "txid")
+	initCollection(tbSwapDelete, &collSwapDelete, "txid")
 
 	//initDefaultValue()
 }

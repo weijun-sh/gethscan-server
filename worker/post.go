@@ -81,11 +81,13 @@ type swapPost struct {
 func postBridgeSwap(post *mongodb.MgoRegisteredSwap) error {
 	//rpcMethod = "swap.Swapin"
 	//rpcMethod = "swap.Swapout"
-	log.Info("postBridgeSwap", "txid", post.Key, "pairID", post.PairID, "method", post.Method, "rpc", post.SwapServer)
+	log.Info("postBridgeSwap", "Key", post.Key, "chainID", post.ChainID, "pairID", post.PairID, "method", post.Method, "rpc", post.SwapServer)
 	swap := &swapPost{
 		txid:       post.Key,
 		pairID:     post.PairID,
 		rpcMethod:  post.Method,
+		chainID:    post.ChainID,
+		logIndex:   post.LogIndex,
 		swapServer: post.SwapServer,
 	}
 	return postSwapPost(swap)
@@ -93,7 +95,7 @@ func postBridgeSwap(post *mongodb.MgoRegisteredSwap) error {
 
 func postSwapPost(swap *swapPost) error {
 	var needCached bool
-	//var needPending bool
+	var errPending error = errors.New("Post err")
 	for i := 0; i < rpcRetryCount; i++ {
 		err := rpcPost(swap)
 		if err == nil {
@@ -104,7 +106,8 @@ func postSwapPost(swap *swapPost) error {
 			strings.Contains(err.Error(), httpTimeoutKeywords) ||
 			strings.Contains(err.Error(), errConnectionRefused) {
 			needCached = true
-			//needPending = true
+		} else {
+			errPending = nil
 		}
 		time.Sleep(rpcInterval)
 	}
@@ -112,19 +115,7 @@ func postSwapPost(swap *swapPost) error {
 		log.Warn("cache swap", "swap", swap)
 		cachedSwapPosts.Add(swap)
 	}
-	return errors.New("Post err")
-       //if needPending {
-       //        if mongodbEnable {
-       //                //insert mongo post pending
-       //                addMongodbSwapPendingPost(swap)
-       //        }
-       //}
-       //if !needCached && !needPending {
-       //        if mongodbEnable {
-       //                //insert mongo post
-       //                addMongodbSwapPost(swap)
-       //        }
-       //}
+	return errPending
 }
 
 func rpcPost(swap *swapPost) error {

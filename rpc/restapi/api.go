@@ -234,7 +234,22 @@ func RegisterSwapHandler(w http.ResponseWriter, r *http.Request) {
 	txid := vars["txid"]
 	method := vars["method"]
 	swapServer := vars["swapserver"]
-	res, err := swapapi.RegisterSwap(method, pairid, txid, swapServer)
+	//chain := vars["chain"]
+	res, err := swapapi.RegisterSwap("", method, pairid, txid, swapServer)
+	writeResponse(w, res, err)
+}
+
+// RegisterSwapRouterHandler handler
+func RegisterSwapRouterHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("RegisterSwapRouterHandler, r: %v\n", r)
+	vars := mux.Vars(r)
+	chainid := vars["chainid"]
+	txid := vars["txid"]
+	logindex := vars["logindex"]
+	method := vars["method"]
+	swapServer := vars["swapserver"]
+	//chain := vars["chain"]
+	res, err := swapapi.RegisterSwapRouter("", method, chainid, txid, logindex, swapServer)
 	writeResponse(w, res, err)
 }
 

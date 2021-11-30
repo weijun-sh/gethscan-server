@@ -749,13 +749,14 @@ func AddRegisteredSwapPending(chain, token, txid string) error {
 }
 
 // AddRegisteredSwap add register swap
-func AddRegisteredSwap(method, pairid, txid, swapServer string) error {
+func AddRegisteredSwap(chain, method, pairid, txid, swapServer string) error {
 	now := time.Now()
 	ma := &MgoRegisteredSwap{
 		Key:        txid,
 		PairID:     pairid,
 		Method:     method,
 		SwapServer: swapServer,
+		Chain:      chain,
 		Status:     NewRegister,
 		Timestamp:  now.Unix(),
 		Date:       fmt.Sprintf(now.Format("2006-01-02 15:04:00")),
@@ -769,13 +770,36 @@ func AddRegisteredSwap(method, pairid, txid, swapServer string) error {
 	return mgoError(err)
 }
 
-// RemoveRegisteredSwap add register swap
-func RemoveRegisteredSwap(id string) error {
-	err := collRegisteredSwap.Remove(bson.M{"_id": id})
+// AddRegisteredSwapRouter add register swap
+func AddRegisteredSwapRouter(chain, method, chainid, txid, logIndex, swapServer string) error {
+	now := time.Now()
+	ma := &MgoRegisteredSwap{
+		Key:        txid,
+		ChainID:    chainid,
+		Method:     method,
+		LogIndex:   logIndex,
+		SwapServer: swapServer,
+		Status:     NewRegister,
+		Chain:      chain,
+		Timestamp:  now.Unix(),
+		Date:       fmt.Sprintf(now.Format("2006-01-02 15:04:00")),
+	}
+	err := collRegisteredSwap.Insert(ma)
 	if err == nil {
-		log.Info("mongodb remove register swap", "key", id)
+		log.Info("mongodb add register swap router", "key", ma.Key)
 	} else {
-		log.Info("mongodb remove register swap", "key", id, "err", err)
+		log.Info("mongodb add register swap router", "key", ma.Key, "err", err)
+	}
+	return mgoError(err)
+}
+
+// RemoveRegisteredSwap remove register swap
+func RemoveRegisteredSwap(txid string) error {
+	err := collRegisteredSwap.Remove(bson.M{"_id": txid})
+	if err == nil {
+		log.Info("mongodb remove register swap", "key", txid)
+	} else {
+		log.Info("mongodb remove register swap", "key", txid, "err", err)
 	}
 	return mgoError(err)
 }

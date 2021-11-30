@@ -89,6 +89,7 @@ func initRouter(r *mux.Router) {
 
 	r.HandleFunc("/register/post/{chain}/{token}/{txid}", restapi.RegisterSwapPendingHandler).Methods("POST")
 	r.HandleFunc("/register/post/{method}/{pairid}/{txid}/{swapserver}", restapi.RegisterSwapHandler).Methods("POST")
+	r.HandleFunc("/register/post/{method}/{chainid}/{txid}/{logindex}/{swapserver}", restapi.RegisterSwapRouterHandler).Methods("POST")
 	//r.HandleFunc("/swapin/post/{pairid}/{txid}", restapi.PostSwapinHandler).Methods("POST")
 	//r.HandleFunc("/swapout/post/{pairid}/{txid}", restapi.PostSwapoutHandler).Methods("POST")
 	//r.HandleFunc("/swapin/p2sh/{txid}/{bind}", restapi.PostP2shSwapinHandler).Methods("POST")
