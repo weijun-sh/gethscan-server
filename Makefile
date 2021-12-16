@@ -1,13 +1,13 @@
 .PHONY: all test testv clean fmt
-.PHONY: swapserver swaporacle
+.PHONY: scanserver swaporacle
 
 GOBIN = ./build/bin
 GOCMD = env GO111MODULE=on GOPROXY=https://goproxy.io go
 
-swapserver:
-	$(GOCMD) run build/ci.go install ./cmd/swapserver
+scanserver:
+	$(GOCMD) run build/ci.go install ./cmd/scanserver
 	@echo "Done building."
-	@echo "Run \"$(GOBIN)/swapserver\" to launch swapserver."
+	@echo "Run \"$(GOBIN)/scanserver\" to launch scanserver."
 
 swaporacle:
 	$(GOCMD) run build/ci.go install ./cmd/swaporacle
