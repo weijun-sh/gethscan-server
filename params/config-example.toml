@@ -11,6 +11,8 @@ Password = "test123456"
 Port = 11556
 # CORS config
 AllowedOrigins = ["*"]
+# Maximum number of requests to limit per second
+MaxRequestsLimit = 100
 
 [Extra]
 MustRegisterAccount = true
