@@ -29,6 +29,10 @@ func StartAPIServer() {
 	apiPort := params.GetAPIPort()
 	apiServer := params.GetServerConfig().APIServer
 	allowedOrigins := apiServer.AllowedOrigins
+        maxRequestsLimit := apiServer.MaxRequestsLimit
+        if maxRequestsLimit <= 0 {
+                maxRequestsLimit = 10 // default value
+        }
 
 	corsOptions := []handlers.CORSOption{
 		handlers.AllowedMethods([]string{"GET", "POST"}),
@@ -41,7 +45,7 @@ func StartAPIServer() {
 	}
 
 	log.Info("JSON RPC service listen and serving", "port", apiPort, "allowedOrigins", allowedOrigins)
-	lmt := tollbooth.NewLimiter(10, &limiter.ExpirableOptions{DefaultExpirationTTL: time.Hour})
+	lmt := tollbooth.NewLimiter(float64(maxRequestsLimit), &limiter.ExpirableOptions{DefaultExpirationTTL: time.Hour})
 	handler := tollbooth.LimitHandler(lmt, handlers.CORS(corsOptions...)(router))
 	svr := http.Server{
 		Addr:         fmt.Sprintf(":%v", apiPort),
@@ -87,7 +91,7 @@ func initRouter(r *mux.Router) {
 	//r.HandleFunc("/pairsinfo/{pairids}", restapi.TokenPairsInfoHandler).Methods("GET")
 	//r.HandleFunc("/statistics/{pairid}", restapi.StatisticsHandler).Methods("GET")
 
-	r.HandleFunc("/register/post/{chain}/{token}/{txid}", restapi.RegisterSwapPendingHandler).Methods("POST")
+	r.HandleFunc("/register/post/{chain}/{txid}", restapi.RegisterSwapPendingHandler).Methods("POST")
 	r.HandleFunc("/register/post/{method}/{pairid}/{txid}/{swapserver}", restapi.RegisterSwapHandler).Methods("POST")
 	r.HandleFunc("/register/post/{method}/{chainid}/{txid}/{logindex}/{swapserver}", restapi.RegisterSwapRouterHandler).Methods("POST")
 	//r.HandleFunc("/swapin/post/{pairid}/{txid}", restapi.PostSwapinHandler).Methods("POST")

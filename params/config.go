@@ -81,6 +81,7 @@ type OracleConfig struct {
 type APIServerConfig struct {
 	Port           int
 	AllowedOrigins []string
+	MaxRequestsLimit int
 }
 
 // MongoDBConfig mongodb config
