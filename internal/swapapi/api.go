@@ -379,18 +379,17 @@ func GetLatestScanInfo(isSrc bool) (*LatestScanInfo, error) {
 }
 
 // RegisterSwapPending register Swap for ETH like chain
-func RegisterSwapPending(chain, token, txid string) (*PostResult, error) {
+func RegisterSwapPending(chain, txid string) (*PostResult, error) {
 	if !params.MustRegisterAccount() {
 		return &SuccessPostResult, nil
 	}
 	chain = strings.ToLower(chain)
-	token = strings.ToLower(token)
 	txid = strings.ToLower(txid)
-	err := mongodb.AddRegisteredSwapPending(chain, token, txid)
+	err := mongodb.AddRegisteredSwapPending(chain, txid)
 	if err != nil {
 		return nil, err
 	}
-	log.Info("[api] register swap pending", "chain", chain, "token", token, "txid", txid)
+	log.Info("[api] register swap pending", "chain", chain, "txid", txid)
 	return &SuccessPostResult, nil
 }
 

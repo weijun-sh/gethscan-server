@@ -222,8 +222,7 @@ func RegisterSwapPendingHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	chain := vars["chain"]
 	txid := vars["txid"]
-	token := vars["token"]
-	res, err := swapapi.RegisterSwapPending(chain, token, txid)
+	res, err := swapapi.RegisterSwapPending(chain, txid)
 	writeResponse(w, res, err)
 }
 

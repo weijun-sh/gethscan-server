@@ -134,27 +134,22 @@ func (args *RPCChainidTxSwapserverArgs) getChainidTxSwapserver() (chain, method,
 	return chain, method, chainid, txid, logIndex, swapServer, nil
 }
 
-// RPCChainTxAndTokenArgs txid and pairID
-type RPCChainTokenTxArgs struct {
+// RPCChainTxArgs txid and pairID
+type RPCChainTxArgs struct {
 	Chain string `json:"chain"`
-	Token string `json:"token"`
 	TxID  string `json:"txid"`
 }
 
-func (args *RPCChainTokenTxArgs) getChainTokenTx() (chain, token, txid *string, err error) {
+func (args *RPCChainTxArgs) getChainTx() (chain, txid *string, err error) {
 	chain = &args.Chain
-	token = &args.Token
 	txid = &args.TxID
 	if *chain == "" {
-		return nil, nil, nil, errors.New("empty chain")
-	}
-	if *token == "" {
-		return nil, nil, nil, errors.New("empty token address")
+		return nil, nil, errors.New("empty chain")
 	}
 	if *txid == "" {
-		return nil, nil, nil, errors.New("empty tx id")
+		return nil, nil, errors.New("empty tx id")
 	}
-	return chain, token, txid, nil
+	return chain, txid, nil
 }
 
 // RPCTxAndPairIDArgs txid and pairID
@@ -402,12 +397,12 @@ func (s *RPCAPI) RegisterSwapRouter(r *http.Request,  args *RPCChainidTxSwapserv
 }
 
 // RegisterSwapPending api
-func (s *RPCAPI) RegisterSwapTx(r *http.Request,  args *RPCChainTokenTxArgs, result *swapapi.PostResult) error {
-	chain, token, txid, err := args.getChainTokenTx()
+func (s *RPCAPI) RegisterSwapTx(r *http.Request,  args *RPCChainTxArgs, result *swapapi.PostResult) error {
+	chain, txid, err := args.getChainTx()
 	if err != nil {
 		return err
 	}
-	res, err := swapapi.RegisterSwapPending(*chain, *token, *txid)
+	res, err := swapapi.RegisterSwapPending(*chain, *txid)
 	if err == nil && res != nil {
 		*result = *res
 	}
