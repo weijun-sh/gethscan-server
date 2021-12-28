@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/weijun-sh/gethscan-server/cmd/utils"
@@ -16,7 +17,7 @@ import (
 var (
 	rpcRetryCount = 3
 	rpcInterval = 1 * time.Second
-	postInterval = 5 * time.Second
+	postInterval = 1 * time.Second
 	cachedSwapPosts *Ring
 )
 
@@ -27,6 +28,7 @@ const (
 	routerSwapExistResultTmp   = "alreday registered"
 	httpTimeoutKeywords     = "Client.Timeout exceeded while awaiting headers"
 	errConnectionRefused    = "connect: connection refused"
+	errMaximumRequestLimit  = "You have reached maximum request limit"
 	rpcQueryErrKeywords     = "rpc query error"
 	errDepositLogNotFountorRemoved = "return error: json-rpc error -32099, verify swap failed! deposit log not found or removed"
 )
@@ -50,18 +52,25 @@ func loopDoPostJob() {
 }
 
 func findSwapAndPost() {
-        post, err := mongodb.FindRegisterdSwap(0, 10)
+        post, err := mongodb.FindRegisterdSwap("", 0, 10)
         if err != nil || len(post) == 0 {
-               time.Sleep(3 * postInterval)
                return
 	}
-	for _, p := range post {
-		ok := postBridgeSwap(p)
-		if ok == nil {
-			mongodb.AddSwapPost(p)
-			mongodb.RemoveRegisteredSwap(p.Key)
-		}
+        wg := new(sync.WaitGroup)
+        wg.Add(len(post))
+
+	for i, _ := range post {
+		go func(p *mongodb.MgoRegisteredSwap) {
+			defer wg.Done()
+			ok := postBridgeSwap(p)
+			if ok == nil {
+				log.Info("post Swap success", "Key", p.Key, "chainID", p.ChainID, "pairID", p.PairID, "method", p.Method, "rpc", p.SwapServer)
+				mongodb.UpdateRegisteredSwapStatus(p.Key, true)
+			}
+			fmt.Printf("")
+		}(post[i])
 	}
+	wg.Wait()
 }
 
 type swapPost struct {
@@ -81,7 +90,6 @@ type swapPost struct {
 func postBridgeSwap(post *mongodb.MgoRegisteredSwap) error {
 	//rpcMethod = "swap.Swapin"
 	//rpcMethod = "swap.Swapout"
-	log.Info("postBridgeSwap", "Key", post.Key, "chainID", post.ChainID, "pairID", post.PairID, "method", post.Method, "rpc", post.SwapServer)
 	swap := &swapPost{
 		txid:       post.Key,
 		pairID:     post.PairID,
@@ -104,7 +112,8 @@ func postSwapPost(swap *swapPost) error {
 		log.Warn("postSwapPost", "err", err)
 		if errors.Is(err, tokens.ErrTxNotFound) ||
 			strings.Contains(err.Error(), httpTimeoutKeywords) ||
-			strings.Contains(err.Error(), errConnectionRefused) {
+			strings.Contains(err.Error(), errConnectionRefused) ||
+			strings.Contains(err.Error(), errMaximumRequestLimit) {
 			needCached = true
 		} else {
 			errPending = nil

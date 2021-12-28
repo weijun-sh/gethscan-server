@@ -21,7 +21,9 @@ const (
 
 const (
 	NewRegister = iota
-	SwapSuccess
+	SwapSuccess //find and success post
+	SwapPending //not found or rpc error, find next time after 10 min
+	SwapError //found but error
 )
 
 var (
@@ -675,9 +677,15 @@ func FindP2shAddresses(offset, limit int) ([]*MgoP2shAddress, error) {
 	return result, nil
 }
 
-func FindRegisterdSwap(offset, limit int) ([]*MgoRegisteredSwap, error) {
+func FindRegisterdSwap(chain string, offset, limit int) ([]*MgoRegisteredSwap, error) {
 	result := make([]*MgoRegisteredSwap, 0, limit)
-	q := collRegisteredSwap.Find(nil).Skip(offset).Limit(limit)
+	qchain := bson.M{"chain": chain}
+	qstatus := bson.M{"status": NewRegister}
+	queries := []bson.M{qchain, qstatus}
+	if chain == "" {
+		queries = []bson.M{qstatus}
+	}
+	q := collRegisteredSwap.Find(bson.M{"$and": queries}).Skip(offset).Limit(limit)
 	err := q.All(&result)
 	if err != nil {
 		return nil, mgoError(err)
@@ -729,12 +737,11 @@ func FindLatestScanInfo(isSrc bool) (*MgoLatestScanInfo, error) {
 }
 
 // AddRegisteredSwapPending add register swap tx
-func AddRegisteredSwapPending(chain, token, txid string) error {
+func AddRegisteredSwapPending(chain, txid string) error {
 	now := time.Now()
 	ma := &MgoRegisteredSwapPending{
 		Key:       txid,
 		Chain:     chain,
-		Token:     token,
 		Status:    NewRegister,
 		Timestamp: now.Unix(),
 		Date:      fmt.Sprintf(now.Format("2006-01-02 15:04:00")),
@@ -791,6 +798,18 @@ func AddRegisteredSwapRouter(chain, method, chainid, txid, logIndex, swapServer 
 		log.Info("mongodb add register swap router", "key", ma.Key, "err", err)
 	}
 	return mgoError(err)
+}
+
+// UpdateRegisteredSwapStatus update register swap status
+func UpdateRegisteredSwapStatus(txid string, success bool) error {
+	status := SwapSuccess
+	if !success {
+		status = NewRegister
+	}
+	selector := bson.M{"_id": txid}
+	data := bson.M{"$set": bson.M{"status": status}}
+	err := collRegisteredSwap.Update(selector, data)
+	return err
 }
 
 // RemoveRegisteredSwap remove register swap
