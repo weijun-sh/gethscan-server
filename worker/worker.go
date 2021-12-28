@@ -18,6 +18,7 @@ func StartWork(isServer bool) {
 	}
 
 	client.InitHTTPClient()
+	StartParseChainTx()
 	StartPostJob()
 	return
 	//bridge.InitCrossChainBridge(isServer)

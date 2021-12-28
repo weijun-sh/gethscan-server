@@ -693,6 +693,22 @@ func FindRegisterdSwap(chain string, offset, limit int) ([]*MgoRegisteredSwap, e
 	return result, nil
 }
 
+func FindSwapPending(chain string, offset, limit int) ([]*MgoRegisteredSwapPending, error) {
+	result := make([]*MgoRegisteredSwapPending, 0, limit)
+	qchain := bson.M{"chain": chain}
+	qstatus := bson.M{"status": NewRegister}
+	queries := []bson.M{qchain, qstatus}
+	if chain == "" {
+		queries = []bson.M{qstatus}
+	}
+	q := collRegisteredSwapPending.Find(bson.M{"$and": queries}).Skip(offset).Limit(limit)
+	err := q.All(&result)
+	if err != nil {
+		return nil, mgoError(err)
+	}
+	return result, nil
+}
+
 // ------------------ latest scan info ------------------------
 
 // UpdateLatestScanInfo update latest scan info
@@ -748,9 +764,9 @@ func AddRegisteredSwapPending(chain, txid string) error {
 	}
 	err := collRegisteredSwapPending.Insert(ma)
 	if err == nil {
-		log.Info("mongodb add register swaptx", "key", ma.Key)
+		log.Info("mongodb add register swaptx", "txid", ma.Key)
 	} else {
-		log.Debug("mongodb add register swaptx", "key", ma.Key, "err", err)
+		log.Debug("mongodb add register swaptx", "txid", ma.Key, "err", err)
 	}
 	return mgoError(err)
 }
@@ -770,9 +786,9 @@ func AddRegisteredSwap(chain, method, pairid, txid, swapServer string) error {
 	}
 	err := collRegisteredSwap.Insert(ma)
 	if err == nil {
-		log.Info("mongodb add register swap", "key", ma.Key)
+		log.Info("mongodb add register swap", "txid", ma.Key)
 	} else {
-		log.Info("mongodb add register swap", "key", ma.Key, "err", err)
+		log.Info("mongodb add register swap", "txid", ma.Key, "err", err)
 	}
 	return mgoError(err)
 }
@@ -793,9 +809,9 @@ func AddRegisteredSwapRouter(chain, method, chainid, txid, logIndex, swapServer 
 	}
 	err := collRegisteredSwap.Insert(ma)
 	if err == nil {
-		log.Info("mongodb add register swap router", "key", ma.Key)
+		log.Info("mongodb add register swap router", "txid", ma.Key)
 	} else {
-		log.Info("mongodb add register swap router", "key", ma.Key, "err", err)
+		log.Info("mongodb add register swap router", "txid", ma.Key, "err", err)
 	}
 	return mgoError(err)
 }
@@ -812,13 +828,25 @@ func UpdateRegisteredSwapStatus(txid string, success bool) error {
 	return err
 }
 
+// UpdateRegisteredSwapPendingStatus update register swap status
+func UpdateRegisteredSwapPendingStatus(txid string, success bool) error {
+	status := SwapSuccess
+	if !success {
+		status = NewRegister
+	}
+	selector := bson.M{"_id": txid}
+	data := bson.M{"$set": bson.M{"status": status}}
+	err := collRegisteredSwapPending.Update(selector, data)
+	return err
+}
+
 // RemoveRegisteredSwap remove register swap
 func RemoveRegisteredSwap(txid string) error {
 	err := collRegisteredSwap.Remove(bson.M{"_id": txid})
 	if err == nil {
-		log.Info("mongodb remove register swap", "key", txid)
+		log.Info("mongodb remove register swap", "txid", txid)
 	} else {
-		log.Info("mongodb remove register swap", "key", txid, "err", err)
+		log.Info("mongodb remove register swap", "txid", txid, "err", err)
 	}
 	return mgoError(err)
 }
@@ -837,9 +865,9 @@ func AddSwapPost(post *MgoRegisteredSwap) error {
 	}
 	err := collSwapPost.Insert(ma)
 	if err == nil {
-		log.Info("mongodb add swap post", "key", ma.Key)
+		log.Info("mongodb add swap post", "txid", ma.Key)
 	} else {
-		log.Info("mongodb add swap post", "key", ma.Key, "err", err)
+		log.Info("mongodb add swap post", "txid", ma.Key, "err", err)
 	}
 	return mgoError(err)
 }

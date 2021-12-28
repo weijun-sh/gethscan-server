@@ -16,3 +16,39 @@ MaxRequestsLimit = 100
 
 [Extra]
 MustRegisterAccount = true
+
+[BlockChain]
+RPC = [
+	"eth,https://nodes.mewapi.io/rpc/eth",
+	"bsc,https://bsc-dataseed1.ninicoin.io/",
+	"matic,https://polygon-rpc.com/",
+	"ftm,https://rpc.ftm.tools",
+	"fsn,http://172.26.142.147:19515",
+	"ht,https://http-mainnet.hecochain.com",
+	"xdai,https://rpc.xdaichain.com",
+	"avax,https://api.avax.network/ext/bc/C/rpc",
+	"okex,https://exchainrpc.okex.org/",
+	#"HMY,https://api.harmony.one",
+	"harmony,https://api.s0.t.hmny.io",
+	"arb,https://arb-mainnet.g.alchemy.com/v2/UCsG7kYCd5E38C55uJ5L_EK4AraC2EiZ",
+	"kcs,https://rpc-mainnet.kcc.network",
+	"moon,https://rpc.moonriver.moonbeam.network",
+	"iotex,https://babel-api.mainnet.iotex.io",
+	"shiden,https://shiden.api.onfinality.io/rpc?apikey=d5da52f9-c548-4d48-8a7b-2ebb4d5d8959",
+	#"shiden,https://shiden.api.onfinality.io/rpc?apikey=ed8d092a-ccfc-4ce7-bb31-ae28bd6556da",
+	#"shiden,https://shiden.api.onfinality.io/rpc?apikey=8509acce-2f4a-417b-a41f-b4e7bfba2bf7",
+	"celo,https://forno.celo.org",
+	"cro,https://evm-cronos.crypto.org",
+	"tlos,https://rpc1.eu.telos.net/evm",
+
+	#"BTC,http://172.26.142.156:3003",
+	#"LTC,http://172.26.142.147:4334",
+	#"BLOCK,https://plugin-api.core.cloudchainsinc.com" # do not modify
+	#"COLX,https://electrs.colossusxt.io",
+	#"OETH,https://mainnet.boba.network",
+	#"TERRA,https://fcd.terra.dev/",
+	#"BOBA,https://mainnet.boba.network",
+	#"FUSE,https://fuse-mainnet.gateway.pokt.network",
+	#"SYS,https://rpc.syscoin.org",
+]
+

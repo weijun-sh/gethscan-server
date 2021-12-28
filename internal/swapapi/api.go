@@ -2,16 +2,17 @@ package swapapi
 
 import (
 	"encoding/hex"
+	"errors"
 	"strings"
 	"time"
 
+	"github.com/btcsuite/btcd/txscript"
+	rpcjson "github.com/gorilla/rpc/v2/json2"
 	"github.com/weijun-sh/gethscan-server/log"
 	"github.com/weijun-sh/gethscan-server/mongodb"
 	"github.com/weijun-sh/gethscan-server/params"
 	"github.com/weijun-sh/gethscan-server/tokens"
 	"github.com/weijun-sh/gethscan-server/tokens/btc"
-	"github.com/btcsuite/btcd/txscript"
-	rpcjson "github.com/gorilla/rpc/v2/json2"
 )
 
 var (
@@ -385,6 +386,14 @@ func RegisterSwapPending(chain, txid string) (*PostResult, error) {
 	}
 	chain = strings.ToLower(chain)
 	txid = strings.ToLower(txid)
+	ok := params.CheckChainSupport(chain)
+	if !ok {
+		return nil, errors.New("chain is not support")
+	}
+	ok = params.CheckTxID(txid)
+	if !ok {
+		return nil, errors.New("tx format error")
+	}
 	err := mongodb.AddRegisteredSwapPending(chain, txid)
 	if err != nil {
 		return nil, err

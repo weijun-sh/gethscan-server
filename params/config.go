@@ -25,6 +25,8 @@ var (
 
 	// ServerAPIAddress server api address
 	ServerAPIAddress string
+
+	chainRpc map[string]string = make(map[string]string)
 )
 
 // BridgeConfig config items (decode from toml file)
@@ -39,6 +41,11 @@ type BridgeConfig struct {
 	BtcExtra    *tokens.BtcExtraConfig `toml:",omitempty" json:",omitempty"`
 	Extra       *ExtraConfig           `toml:",omitempty" json:",omitempty"`
 	Dcrm        *DcrmConfig            `toml:",omitempty" json:",omitempty"`
+	BlockChain  *blockChainConfig      `toml:",omitempty" json:",omitempty"`
+}
+
+type blockChainConfig struct {
+	RPC   []string
 }
 
 // ServerConfig swap server config
@@ -90,6 +97,7 @@ type MongoDBConfig struct {
 	DBName   string
 	UserName string `json:"-"`
 	Password string `json:"-"`
+	Enable   bool
 }
 
 // ExtraConfig extra config
@@ -206,6 +214,7 @@ func LoadConfig(configFile string, isServer bool) *BridgeConfig {
 			config.Server = nil
 		}
 
+		initChain(config)
 		SetConfig(config)
 		var bs []byte
 		if log.JSONFormat {
@@ -219,6 +228,35 @@ func LoadConfig(configFile string, isServer bool) *BridgeConfig {
 		//}
 	})
 	return bridgeConfig
+}
+
+
+func initChain(config *BridgeConfig) {
+       blockChain := config.BlockChain
+       for _, r := range blockChain.RPC {
+               slice := strings.Split(r, ",")
+               if len(slice) != 2 {
+                       log.Fatalf("LoadConfig initChain rpc: %v error", r)
+               }
+               chainRpc[slice[0]] = slice[1]
+       }
+}
+
+func CheckChainSupport(eth string) bool {
+       if chainRpc[strings.ToLower(eth)] != "" {
+               return true
+       }
+       return false
+}
+
+func CheckTxID(txid string) bool {
+       //if strings.EqualFold(txid[:2], "0x") {
+               length := len(txid)
+               if length < 70 && length > 60 {
+                       return true
+               }
+       //}
+       return false
 }
 
 // HasAdmin has admin
@@ -256,3 +294,9 @@ func SetDataDir(dir string) {
 func GetDataDir() string {
 	return locDataDir
 }
+
+// GetChainRpc get chain rpc
+func GetChainRPC(chain string) string {
+	return chainRpc[chain]
+}
+

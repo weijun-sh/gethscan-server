@@ -21,6 +21,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/rpc v1.2.0
 	github.com/jordan-wright/email v0.0.0-20200917010138-e1c00e156980
+	github.com/jowenshaw/gethclient v0.3.1 // indirect
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.5 // indirect
 	github.com/ltcsuite/ltcd v0.20.1-beta

@@ -66,8 +66,9 @@ func findSwapAndPost() {
 			if ok == nil {
 				log.Info("post Swap success", "Key", p.Key, "chainID", p.ChainID, "pairID", p.PairID, "method", p.Method, "rpc", p.SwapServer)
 				mongodb.UpdateRegisteredSwapStatus(p.Key, true)
+			} else {
+				log.Info("post Swap fail", "Key", p.Key, "chainID", p.ChainID, "pairID", p.PairID, "method", p.Method, "rpc", p.SwapServer, "err", ok)
 			}
-			fmt.Printf("")
 		}(post[i])
 	}
 	wg.Wait()

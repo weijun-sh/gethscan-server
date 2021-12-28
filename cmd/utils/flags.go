@@ -20,7 +20,7 @@ var (
 	}
 	// TokenPairsDirFlag --pairsdir
 	TokenPairsDirFlag = &cli.StringFlag{
-		Name:  "pairsdir",
+		Name:  "tokensdir",
 		Usage: "Specify token pairs directory",
 	}
 	// LogFileFlag --log

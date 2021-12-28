@@ -65,7 +65,7 @@ func swapserver(ctx *cli.Context) error {
 	configFile := utils.GetConfigFilePath(ctx)
 	config := params.LoadConfig(configFile, true)
 
-	//tokens.SetTokenPairsDir(utils.GetTokenPairsDir(ctx))
+	params.SetTokenPairsDir(utils.GetTokenPairsDir(ctx))
 
 	dbConfig := config.Server.MongoDB
 	mongodb.MongoServerInit([]string{dbConfig.DBURL}, dbConfig.DBName, dbConfig.UserName, dbConfig.Password)
