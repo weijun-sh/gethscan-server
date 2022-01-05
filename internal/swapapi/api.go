@@ -412,7 +412,7 @@ func RegisterSwap(chain, method, pairid, txid, swapServer string) (*PostResult, 
 	pairid = strings.ToLower(pairid)
 	txid = strings.ToLower(txid)
 	swapServer = strings.ToLower(swapServer)
-	err := mongodb.AddRegisteredSwap(chain, method, pairid, txid, swapServer)
+	err := mongodb.AddRegisteredSwap(chain, method, pairid, txid, "0", "0", swapServer)
 	if err != nil {
 		return nil, err
 	}
@@ -431,7 +431,7 @@ func RegisterSwapRouter(chain, method, chainid, txid, logIndex, swapServer strin
 	txid = strings.ToLower(txid)
 	logIndex = strings.ToLower(logIndex)
 	swapServer = strings.ToLower(swapServer)
-	err := mongodb.AddRegisteredSwapRouter(chain, method, chainid, txid, logIndex, swapServer)
+	err := mongodb.AddRegisteredSwap(chain, method, "", txid, chainid, logIndex, swapServer)
 	if err != nil {
 		return nil, err
 	}

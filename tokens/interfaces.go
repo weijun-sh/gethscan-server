@@ -36,12 +36,14 @@ var (
 	ErrTxFuncHashMismatch   = errors.New("tx func hash mismatch")
 	ErrDepositLogNotFound   = errors.New("deposit log not found or removed")
 	ErrSwapoutLogNotFound   = errors.New("swapout log not found or removed")
+	ErrRouterLogNotFound    = errors.New("swap router log not found or removed")
 	ErrUnknownPairID        = errors.New("unknown pair ID")
 	ErrBindAddressMismatch  = errors.New("bind address mismatch")
 	ErrRPCQueryError        = errors.New("rpc query error")
 	ErrWrongSwapValue       = errors.New("wrong swap value")
 	ErrTxIncompatible       = errors.New("tx incompatible")
 	ErrTxWithWrongReceipt   = errors.New("tx with wrong receipt")
+	ErrTxReceiptNotFound    = errors.New("tx receipt not found or removed")
 
 	// errors should register
 	ErrTxWithWrongMemo       = errors.New("tx with wrong memo")

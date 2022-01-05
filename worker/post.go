@@ -62,11 +62,14 @@ func findSwapAndPost() {
 	for i, _ := range post {
 		go func(p *mongodb.MgoRegisteredSwap) {
 			defer wg.Done()
-			ok := postBridgeSwap(p)
-			if ok == nil {
+			pending, ok := postBridgeSwap(p)
+			if !pending && ok == nil {
 				log.Info("post Swap success", "Key", p.Key, "chainID", p.ChainID, "pairID", p.PairID, "method", p.Method, "rpc", p.SwapServer)
-				mongodb.UpdateRegisteredSwapStatus(p.Key, true)
+				mongodb.UpdateRegisteredSwapStatusSuccess(p.Key)
 			} else {
+				if !pending {
+					mongodb.UpdateRegisteredSwapStatusFailed(p.Key)
+				}
 				log.Info("post Swap fail", "Key", p.Key, "chainID", p.ChainID, "pairID", p.PairID, "method", p.Method, "rpc", p.SwapServer, "err", ok)
 			}
 		}(post[i])
@@ -88,27 +91,26 @@ type swapPost struct {
 	logIndex string
 }
 
-func postBridgeSwap(post *mongodb.MgoRegisteredSwap) error {
-	//rpcMethod = "swap.Swapin"
-	//rpcMethod = "swap.Swapout"
+func postBridgeSwap(post *mongodb.MgoRegisteredSwap) (bool, error) {
 	swap := &swapPost{
 		txid:       post.Key,
 		pairID:     post.PairID,
 		rpcMethod:  post.Method,
-		chainID:    post.ChainID,
-		logIndex:   post.LogIndex,
+		chainID:    fmt.Sprintf("%v", post.ChainID),
+		logIndex:   fmt.Sprintf("%v", post.LogIndex),
 		swapServer: post.SwapServer,
 	}
 	return postSwapPost(swap)
 }
 
-func postSwapPost(swap *swapPost) error {
+func postSwapPost(swap *swapPost) (bool, error) {
 	var needCached bool
+	var pending bool = true
 	var errPending error = errors.New("Post err")
 	for i := 0; i < rpcRetryCount; i++ {
 		err := rpcPost(swap)
 		if err == nil {
-			return nil
+			return false, nil
 		}
 		log.Warn("postSwapPost", "err", err)
 		if errors.Is(err, tokens.ErrTxNotFound) ||
@@ -117,7 +119,8 @@ func postSwapPost(swap *swapPost) error {
 			strings.Contains(err.Error(), errMaximumRequestLimit) {
 			needCached = true
 		} else {
-			errPending = nil
+			pending = false
+			errPending = err
 		}
 		time.Sleep(rpcInterval)
 	}
@@ -125,7 +128,7 @@ func postSwapPost(swap *swapPost) error {
 		log.Warn("cache swap", "swap", swap)
 		cachedSwapPosts.Add(swap)
 	}
-	return errPending
+	return pending, errPending
 }
 
 func rpcPost(swap *swapPost) error {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"strconv"
 	"sync"
 	"time"
 
@@ -20,9 +21,10 @@ const (
 )
 
 const (
-	NewRegister = iota
-	SwapSuccess //find and success post
-	SwapPending //not found or rpc error, find next time after 10 min
+	SwapSuccess = iota//find and success post
+	NewRegister // new
+	SwapNotFound
+	SwapMoreTime // rpc error, find next time after 10 min
 	SwapError //found but error
 )
 
@@ -764,80 +766,81 @@ func AddRegisteredSwapPending(chain, txid string) error {
 	}
 	err := collRegisteredSwapPending.Insert(ma)
 	if err == nil {
-		log.Info("mongodb add register swaptx", "txid", ma.Key)
+		log.Info("mongodb add register swap pending", "txid", ma.Key, "chain", chain)
 	} else {
-		log.Debug("mongodb add register swaptx", "txid", ma.Key, "err", err)
+		log.Debug("mongodb add register swap pending", "txid", ma.Key, "chain", chain, "err", err)
 	}
 	return mgoError(err)
 }
 
 // AddRegisteredSwap add register swap
-func AddRegisteredSwap(chain, method, pairid, txid, swapServer string) error {
+func AddRegisteredSwap(chain, method, pairid, txid, chainid, logIndex, swapServer string) error {
 	now := time.Now()
+	i64, _ := strconv.ParseInt(logIndex, 10, 64)
+	c64, _ := strconv.ParseInt(chainid, 10, 64)
 	ma := &MgoRegisteredSwap{
 		Key:        txid,
 		PairID:     pairid,
 		Method:     method,
+		LogIndex:   uint64(i64),
 		SwapServer: swapServer,
 		Chain:      chain,
+		ChainID:    uint64(c64),
 		Status:     NewRegister,
 		Timestamp:  now.Unix(),
 		Date:       fmt.Sprintf(now.Format("2006-01-02 15:04:00")),
 	}
 	err := collRegisteredSwap.Insert(ma)
 	if err == nil {
-		log.Info("mongodb add register swap", "txid", ma.Key)
+		log.Info("mongodb add register swap success", "txid", ma.Key, "chain", chain)
 	} else {
-		log.Info("mongodb add register swap", "txid", ma.Key, "err", err)
-	}
-	return mgoError(err)
-}
-
-// AddRegisteredSwapRouter add register swap
-func AddRegisteredSwapRouter(chain, method, chainid, txid, logIndex, swapServer string) error {
-	now := time.Now()
-	ma := &MgoRegisteredSwap{
-		Key:        txid,
-		ChainID:    chainid,
-		Method:     method,
-		LogIndex:   logIndex,
-		SwapServer: swapServer,
-		Status:     NewRegister,
-		Chain:      chain,
-		Timestamp:  now.Unix(),
-		Date:       fmt.Sprintf(now.Format("2006-01-02 15:04:00")),
-	}
-	err := collRegisteredSwap.Insert(ma)
-	if err == nil {
-		log.Info("mongodb add register swap router", "txid", ma.Key)
-	} else {
-		log.Info("mongodb add register swap router", "txid", ma.Key, "err", err)
+		log.Info("mongodb add register swap failed", "txid", ma.Key, "chain", chain, "err", err)
 	}
 	return mgoError(err)
 }
 
 // UpdateRegisteredSwapStatus update register swap status
-func UpdateRegisteredSwapStatus(txid string, success bool) error {
+func UpdateRegisteredSwapStatusSuccess(txid string) error {
 	status := SwapSuccess
-	if !success {
-		status = NewRegister
-	}
+	return UpdateRegisteredSwapStatus(txid, status)
+}
+
+func UpdateRegisteredSwapStatusFailed(txid string) error {
+	status := SwapError
+	return UpdateRegisteredSwapStatus(txid, status)
+}
+
+func UpdateRegisteredSwapStatus(txid string, status int) error {
 	selector := bson.M{"_id": txid}
 	data := bson.M{"$set": bson.M{"status": status}}
 	err := collRegisteredSwap.Update(selector, data)
 	return err
 }
 
-// UpdateRegisteredSwapPendingStatus update register swap status
-func UpdateRegisteredSwapPendingStatus(txid string, success bool) error {
+// UpdateSwapPending update register swap status
+func UpdateSwapPendingSuccess(txid string) error {
 	status := SwapSuccess
-	if !success {
-		status = NewRegister
-	}
+	return UpdateSwapPendingStatus(txid, status)
+}
+
+// UpdateSwapPendingStatus update register swap status
+func UpdateSwapPendingStatus(txid string, status int) error {
 	selector := bson.M{"_id": txid}
 	data := bson.M{"$set": bson.M{"status": status}}
 	err := collRegisteredSwapPending.Update(selector, data)
 	return err
+}
+
+// UpdateSwapPending update register swap status
+func UpdateSwapPendingFailed(txid string) error {
+	status := SwapError
+	return UpdateSwapPendingStatus(txid, status)
+}
+
+// UpdateSwapPending update register swap status
+func UpdateSwapPendingNotFound(txid string) error {
+	status := SwapNotFound
+	return UpdateSwapPendingStatus(txid, status)
 }
 
 // RemoveRegisteredSwap remove register swap

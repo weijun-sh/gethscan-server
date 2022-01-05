@@ -94,10 +94,10 @@ type MgoRegisteredSwap struct {
 	Key        string `bson:"_id"`
 	PairID     string `bson:"pairid"`
 	Method     string `bson:"rpcmethod"`
-	LogIndex   string `bson:"logindex"`
+	LogIndex   uint64 `bson:"logindex"`
 	SwapServer string `bson:"swapserver"`
 	Chain      string `bson:"chain"`
-	ChainID    string `bson:"chainid"`
+	ChainID    uint64 `bson:"chainid"`
 	Status     uint8  `bson:"status"`
 	Timestamp  int64  `bson:"timestamp"`
 	Date       string `bson:"data"`
