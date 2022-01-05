@@ -84,6 +84,7 @@ func initRouter(r *mux.Router) {
 
 	r.Handle("/rpc", rpcserver)
 
+	r.HandleFunc("/help", restapi.HelpHandler).Methods("GET")
 	r.HandleFunc("/serverinfo", restapi.ServerInfoHandler).Methods("GET")
 	r.HandleFunc("/versioninfo", restapi.VersionInfoHandler).Methods("GET")
 	//r.HandleFunc("/nonceinfo", restapi.NonceInfoHandler).Methods("GET")
@@ -91,7 +92,8 @@ func initRouter(r *mux.Router) {
 	//r.HandleFunc("/pairsinfo/{pairids}", restapi.TokenPairsInfoHandler).Methods("GET")
 	//r.HandleFunc("/statistics/{pairid}", restapi.StatisticsHandler).Methods("GET")
 
-	r.HandleFunc("/register/post/{chain}/{txid}", restapi.RegisterSwapPendingHandler).Methods("POST")
+	r.HandleFunc("/swap/register/{chain}/{txid}", restapi.RegisterSwapPendingHandler).Methods("POST")
+	r.HandleFunc("/swap/status/{chain}/{txid}", restapi.SwapStatusHandler).Methods("GET")
 	r.HandleFunc("/register/post/{method}/{pairid}/{txid}/{swapserver}", restapi.RegisterSwapHandler).Methods("POST")
 	r.HandleFunc("/register/post/{method}/{chainid}/{txid}/{logindex}/{swapserver}", restapi.RegisterSwapRouterHandler).Methods("POST")
 	//r.HandleFunc("/swapin/post/{pairid}/{txid}", restapi.PostSwapinHandler).Methods("POST")

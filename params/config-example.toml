@@ -26,7 +26,7 @@ RPC = [
 	"fsn,http://49.235.123.22:19515",
 	"ht,https://http-mainnet.hecochain.com",
 	"xdai,http://49.235.123.22:21312",
-	"avax,http://49.235.123.22:21318/ext/bc/C/rpc",
+	"avax,https://api.avax.network/ext/bc/C/rpc",
 	"okex,https://exchainrpc.okex.org/",
 	#"HMY,https://api.harmony.one",
 	"harmony,https://api.s0.t.hmny.io",

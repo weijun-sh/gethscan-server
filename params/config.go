@@ -27,6 +27,7 @@ var (
 	ServerAPIAddress string
 
 	chainRpc map[string]string = make(map[string]string)
+	chainSupport []string
 )
 
 // BridgeConfig config items (decode from toml file)
@@ -239,6 +240,7 @@ func initChain(config *BridgeConfig) {
                        log.Fatalf("LoadConfig initChain rpc: %v error", r)
                }
                chainRpc[slice[0]] = slice[1]
+		chainSupport = append(chainSupport, slice[0])
        }
 }
 
@@ -298,5 +300,10 @@ func GetDataDir() string {
 // GetChainRpc get chain rpc
 func GetChainRPC(chain string) string {
 	return chainRpc[chain]
+}
+
+// GetChainSupport get chain support
+func GetChainSupport() []string {
+	return chainSupport
 }
 

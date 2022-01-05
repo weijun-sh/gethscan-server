@@ -100,7 +100,7 @@ type MgoRegisteredSwap struct {
 	ChainID    uint64 `bson:"chainid"`
 	Status     uint8  `bson:"status"`
 	Timestamp  int64  `bson:"timestamp"`
-	Date       string `bson:"data"`
+	Time       string `bson:"time"`
 }
 
 // MgoRegisteredSwapPending key is address (in whitelist)
@@ -109,7 +109,7 @@ type MgoRegisteredSwapPending struct {
 	Chain      string `bson:"chain"`
 	Status     uint8  `bson:"status"`
 	Timestamp  int64  `bson:"timestamp"`
-	Date       string `bson:"data"`
+	Time       string `bson:"time"`
 }
 
 // MgoRegisteredAddress key is address (in whitelist)

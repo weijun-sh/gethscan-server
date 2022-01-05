@@ -33,6 +33,18 @@ type ServerInfo struct {
 	Version             string
 }
 
+type SwapRegisterStatus struct {
+	Chain string
+	Txid string
+	Register *statusInfo
+	Post *statusInfo
+}
+
+type statusInfo struct {
+	Status uint64
+	Time string
+}
+
 // PostResult post result
 type PostResult string
 

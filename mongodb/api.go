@@ -26,6 +26,7 @@ const (
 	SwapNotFound
 	SwapMoreTime // rpc error, find next time after 10 min
 	SwapError //found but error
+	SwapNotRegister = 400 // not register
 )
 
 var (
@@ -754,6 +755,32 @@ func FindLatestScanInfo(isSrc bool) (*MgoLatestScanInfo, error) {
 	return &result, mgoError(err)
 }
 
+// FindRegisteredSwapStatus get register swap status
+func FindSwapPendingStatus(chain, txid string) (*MgoRegisteredSwapPending, error) {
+	var result MgoRegisteredSwapPending
+	qChain := bson.M{"chain": chain}
+	qTxid := bson.M{"_id": txid}
+	queries := []bson.M{qChain, qTxid}
+	err := collRegisteredSwapPending.Find(bson.M{"$and": queries}).One(&result)
+	if err != nil {
+		return nil, mgoError(err)
+	}
+	return &result, nil
+}
+
+// FindRegisteredSwapStatus get register swap status
+func FindRegisteredSwapStatus(chain, txid string) (*MgoRegisteredSwap, error) {
+	var result MgoRegisteredSwap
+	qChain := bson.M{"chain": chain}
+	qTxid := bson.M{"_id": txid}
+	queries := []bson.M{qChain, qTxid}
+	err := collRegisteredSwap.Find(bson.M{"$and": queries}).One(&result)
+	if err != nil {
+		return nil, mgoError(err)
+	}
+	return &result, nil
+}
+
 // AddRegisteredSwapPending add register swap tx
 func AddRegisteredSwapPending(chain, txid string) error {
 	now := time.Now()
@@ -762,7 +789,7 @@ func AddRegisteredSwapPending(chain, txid string) error {
 		Chain:     chain,
 		Status:    NewRegister,
 		Timestamp: now.Unix(),
-		Date:      fmt.Sprintf(now.Format("2006-01-02 15:04:00")),
+		Time:      fmt.Sprintf(now.Format("2006-01-02 15:04:00")),
 	}
 	err := collRegisteredSwapPending.Insert(ma)
 	if err == nil {
@@ -788,7 +815,7 @@ func AddRegisteredSwap(chain, method, pairid, txid, chainid, logIndex, swapServe
 		ChainID:    uint64(c64),
 		Status:     NewRegister,
 		Timestamp:  now.Unix(),
-		Date:       fmt.Sprintf(now.Format("2006-01-02 15:04:00")),
+		Time:       fmt.Sprintf(now.Format("2006-01-02 15:04:00")),
 	}
 	err := collRegisteredSwap.Insert(ma)
 	if err == nil {
@@ -864,7 +891,7 @@ func AddSwapPost(post *MgoRegisteredSwap) error {
 		SwapServer: post.SwapServer,
 		Status:     SwapSuccess,
 		Timestamp:  now.Unix(),
-		Date:       fmt.Sprintf(now.Format("2006-01-02 15:04:00")),
+		Time:       fmt.Sprintf(now.Format("2006-01-02 15:04:00")),
 	}
 	err := collSwapPost.Insert(ma)
 	if err == nil {
