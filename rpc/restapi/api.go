@@ -49,12 +49,19 @@ func VersionInfoHandler(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, version, nil)
 }
 
-func GetHelp() []string {
-	return []string{
-		"/help",
-		"/versioninfo",
-		"/swap/register/{chain}/{txid}",
-		"/swap/status/{chain}/{txid}",
+type helpInfo struct {
+	Help string
+	Version string
+	Register string
+	Status string
+}
+
+func GetHelp() *helpInfo {
+	return &helpInfo{
+		Help:"/help, method(GET)",
+		Version:"/versioninfo, method(GET)",
+		Register:"/swap/register/{chain}/{txhash}, method(POST)",
+		Status:"/swap/status/{txhash}, method(GET)",
 	}
 }
 
@@ -244,9 +251,8 @@ func RegisterSwapPendingHandler(w http.ResponseWriter, r *http.Request) {
 // SwapStatusHandler handler
 func SwapStatusHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	chain := vars["chain"]
 	txid := vars["txid"]
-	res, err := swapapi.RegisterSwapStatus(chain, txid)
+	res, err := swapapi.RegisterSwapStatus(txid)
 	writeResponse(w, res, err)
 }
 

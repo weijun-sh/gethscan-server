@@ -405,41 +405,40 @@ func RegisterSwapPending(chain, txid string) (*PostResult, error) {
 }
 
 // RegisterSwapStatus register Swap for ETH like chain
-func RegisterSwapStatus(chain, txid string) (*SwapRegisterStatus, error) {
+func RegisterSwapStatus(txid string) (*SwapRegisterStatus, error) {
 	if !params.MustRegisterAccount() {
 		return nil, nil
 	}
-	chain = strings.ToLower(chain)
 	txid = strings.ToLower(txid)
-	ok := params.CheckChainSupport(chain)
-	if !ok {
-		supportErr := fmt.Sprintf("chain '%v' is not support except %v", chain, params.GetChainSupport())
-		return nil, errors.New(supportErr)
-	}
-	ok = params.CheckTxID(txid)
+	ok := params.CheckTxID(txid)
 	if !ok {
 		return nil, errors.New("tx format error")
 	}
 
 	var result SwapRegisterStatus
-	result.Chain = chain
 	result.Txid = txid
 
-	pStatus, err := mongodb.FindSwapPendingStatus(chain, txid)
+	pStatus, err := mongodb.FindSwapPendingStatus(txid)
 	if err == nil {
 		var register statusInfo
+		if len(pStatus.Chain) != 0 {
+			result.Chain = pStatus.Chain
+		}
 		register.Status = uint64(pStatus.Status)
 		register.Time = pStatus.Time
 		result.Register = &register
 	}
-	rStatus, errR := mongodb.FindRegisteredSwapStatus(chain, txid)
+	rStatus, errR := mongodb.FindRegisteredSwapStatus(txid)
 	if errR == nil {
 		var post statusInfo
+		if len(rStatus.Chain) != 0 {
+			result.Chain = rStatus.Chain
+		}
 		post.Status = uint64(rStatus.Status)
-		post.Time = pStatus.Time
+		post.Time = rStatus.Time
 		result.Post = &post
 	}
-	log.Info("[api] register swap status", "chain", chain, "txid", txid, "result", result)
+	log.Info("[api] register swap status", "txid", txid, "result", result)
 	return &result, nil
 }
 

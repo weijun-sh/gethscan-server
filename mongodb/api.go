@@ -756,12 +756,10 @@ func FindLatestScanInfo(isSrc bool) (*MgoLatestScanInfo, error) {
 }
 
 // FindRegisteredSwapStatus get register swap status
-func FindSwapPendingStatus(chain, txid string) (*MgoRegisteredSwapPending, error) {
+func FindSwapPendingStatus(txid string) (*MgoRegisteredSwapPending, error) {
 	var result MgoRegisteredSwapPending
-	qChain := bson.M{"chain": chain}
 	qTxid := bson.M{"_id": txid}
-	queries := []bson.M{qChain, qTxid}
-	err := collRegisteredSwapPending.Find(bson.M{"$and": queries}).One(&result)
+	err := collRegisteredSwapPending.Find(qTxid).One(&result)
 	if err != nil {
 		return nil, mgoError(err)
 	}
@@ -769,12 +767,10 @@ func FindSwapPendingStatus(chain, txid string) (*MgoRegisteredSwapPending, error
 }
 
 // FindRegisteredSwapStatus get register swap status
-func FindRegisteredSwapStatus(chain, txid string) (*MgoRegisteredSwap, error) {
+func FindRegisteredSwapStatus(txid string) (*MgoRegisteredSwap, error) {
 	var result MgoRegisteredSwap
-	qChain := bson.M{"chain": chain}
 	qTxid := bson.M{"_id": txid}
-	queries := []bson.M{qChain, qTxid}
-	err := collRegisteredSwap.Find(bson.M{"$and": queries}).One(&result)
+	err := collRegisteredSwap.Find(qTxid).One(&result)
 	if err != nil {
 		return nil, mgoError(err)
 	}
