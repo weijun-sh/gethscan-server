@@ -834,8 +834,10 @@ func UpdateRegisteredSwapStatusFailed(txid string) error {
 }
 
 func UpdateRegisteredSwapStatus(txid string, status int) error {
+	now := time.Now()
+	Time := fmt.Sprintf(now.Format("2006-01-02 15:04:00"))
 	selector := bson.M{"_id": txid}
-	data := bson.M{"$set": bson.M{"status": status}}
+	data := bson.M{"$set": bson.M{"status": status, "time": Time}}
 	err := collRegisteredSwap.Update(selector, data)
 	return err
 }
