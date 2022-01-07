@@ -189,21 +189,25 @@ func (scanner *ethSwapScanner) loopGetBlock(height uint64) (block *types.Block, 
 	return nil, err
 }
 
-func (scanner *ethSwapScanner) scanTransaction(tx *types.Transaction) {
+func (scanner *ethSwapScanner) scanTransaction(txid string) {
+	tx, err := scanner.loopGetTx(common.HexToHash(txid))
+	if err != nil {
+		log.Info("tx not found", "txid", txid)
+		mongodb.UpdateSwapPendingNotFound(txid)
+		return
+	}
 	if tx.To() == nil {
 		return
 	}
 
-	txHash := tx.Hash().Hex()
-
 	for _, tokenCfg := range scanner.tokens {
-		verifyErr := scanner.verifyTransaction(tx, tokenCfg)
+		verifyErr := scanner.verifyTransaction(txid, tx, tokenCfg)
 		if verifyErr == nil {
 			return
 		}
 	}
-	mongodb.UpdateSwapPendingFailed(tx.Hash().Hex())
-	log.Debug("verify tx failed", "txHash", txHash, "err", tokens.ErrUnknownSwapType)
+	mongodb.UpdateSwapPendingFailed(txid)
+	log.Debug("verify tx failed", "txHash", txid, "err", tokens.ErrUnknownSwapType)
 }
 
 func (scanner *ethSwapScanner) checkTxToAddress(tx *types.Transaction, tokenCfg *params.TokenConfig) (receipt *types.Receipt, isAcceptToAddr bool) {
@@ -252,7 +256,7 @@ func (scanner *ethSwapScanner) checkTxToAddress(tx *types.Transaction, tokenCfg 
 	return receipt, true
 }
 
-func (scanner *ethSwapScanner) verifyTransaction(tx *types.Transaction, tokenCfg *params.TokenConfig) (verifyErr error) {
+func (scanner *ethSwapScanner) verifyTransaction(txid string, tx *types.Transaction, tokenCfg *params.TokenConfig) (verifyErr error) {
 	receipt, isAcceptToAddr := scanner.checkTxToAddress(tx, tokenCfg)
 	if !isAcceptToAddr {
 		return tokens.ErrTxWithWrongReceiver
@@ -264,9 +268,9 @@ func (scanner *ethSwapScanner) verifyTransaction(tx *types.Transaction, tokenCfg
 		index := 0
 		index, verifyErr = scanner.verifyAndPostRouterSwapTx(tx, receipt, tokenCfg)
 		if verifyErr == nil {
-			scanner.addRegisgerRouter(tx.Hash().Hex(), index, tokenCfg)
+			scanner.addRegisgerRouter(txid, index, tokenCfg)
 		} else {
-			mongodb.UpdateSwapPendingFailed(tx.Hash().Hex())
+			mongodb.UpdateSwapPendingFailed(txid)
 		}
 		return verifyErr
 
@@ -289,9 +293,9 @@ func (scanner *ethSwapScanner) verifyTransaction(tx *types.Transaction, tokenCfg
 	}
 
 	if verifyErr == nil {
-		scanner.addRegisterSwap(tx.Hash().Hex(), tokenCfg) // TODO
+		scanner.addRegisterSwap(txid, tokenCfg) // TODO
 	} else {
-		mongodb.UpdateSwapPendingFailed(tx.Hash().Hex())
+		mongodb.UpdateSwapPendingFailed(txid)
 	}
 	return verifyErr
 }
@@ -538,13 +542,7 @@ func FindSwapPendingAndRegister() {
 				return
 			}
 			log.Info("FindSwapPendingAndRegister", "txid", txid, "chain", chain)
-			tx, err := scanner.loopGetTx(common.HexToHash(txid))
-			if err != nil {
-				log.Info("tx not found", "txid", txid, "chain", chain)
-				mongodb.UpdateSwapPendingNotFound(txid)
-				return
-			}
-			scanner.scanTransaction(tx)
+			scanner.scanTransaction(txid)
 		}(pending[i])
 	}
 	wg.Wait()
