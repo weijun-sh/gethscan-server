@@ -32,7 +32,22 @@ const (
 var (
 	retryLock        sync.Mutex
 	updateResultLock sync.Mutex
+
+	RegisterStatus map[int]string = make(map[int]string)
 )
+
+func init() {
+	RegisterStatus[SwapSuccess] = "success"
+	RegisterStatus[NewRegister] = "new"
+	RegisterStatus[SwapNotFound] = "tx not found"
+	RegisterStatus[SwapMoreTime] = "rpc error, find next time"
+	RegisterStatus[SwapError] = "tx found but check error"
+	RegisterStatus[SwapNotRegister] = "tx not register"
+}
+
+func GetRegisterStatus(status int) string {
+	return RegisterStatus[status]
+}
 
 // --------------- swapin and swapout uniform --------------------------------
 
@@ -785,7 +800,7 @@ func AddRegisteredSwapPending(chain, txid string) error {
 		Chain:     chain,
 		Status:    NewRegister,
 		Timestamp: now.Unix(),
-		Time:      fmt.Sprintf(now.Format("2006-01-02 15:04:00")),
+		Time:      fmt.Sprintf(now.Format("2006-01-02 15:04:05")),
 	}
 	err := collRegisteredSwapPending.Insert(ma)
 	if err == nil {
@@ -811,7 +826,7 @@ func AddRegisteredSwap(chain, method, pairid, txid, chainid, logIndex, swapServe
 		ChainID:    uint64(c64),
 		Status:     NewRegister,
 		Timestamp:  now.Unix(),
-		Time:       fmt.Sprintf(now.Format("2006-01-02 15:04:00")),
+		Time:       fmt.Sprintf(now.Format("2006-01-02 15:04:05")),
 	}
 	err := collRegisteredSwap.Insert(ma)
 	if err == nil {
@@ -835,7 +850,7 @@ func UpdateRegisteredSwapStatusFailed(txid string) error {
 
 func UpdateRegisteredSwapStatus(txid string, status int) error {
 	now := time.Now()
-	Time := fmt.Sprintf(now.Format("2006-01-02 15:04:00"))
+	Time := fmt.Sprintf(now.Format("2006-01-02 15:04:05"))
 	selector := bson.M{"_id": txid}
 	data := bson.M{"$set": bson.M{"status": status, "time": Time}}
 	err := collRegisteredSwap.Update(selector, data)
@@ -889,7 +904,7 @@ func AddSwapPost(post *MgoRegisteredSwap) error {
 		SwapServer: post.SwapServer,
 		Status:     SwapSuccess,
 		Timestamp:  now.Unix(),
-		Time:       fmt.Sprintf(now.Format("2006-01-02 15:04:00")),
+		Time:       fmt.Sprintf(now.Format("2006-01-02 15:04:05")),
 	}
 	err := collSwapPost.Insert(ma)
 	if err == nil {

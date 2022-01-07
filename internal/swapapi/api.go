@@ -424,7 +424,7 @@ func RegisterSwapStatus(txid string) (*SwapRegisterStatus, error) {
 		if len(pStatus.Chain) != 0 {
 			result.Chain = pStatus.Chain
 		}
-		register.Status = uint64(pStatus.Status)
+		register.Status = mongodb.GetRegisterStatus(int(pStatus.Status))
 		register.Time = pStatus.Time
 		result.Register = &register
 	}
@@ -434,7 +434,7 @@ func RegisterSwapStatus(txid string) (*SwapRegisterStatus, error) {
 		if len(rStatus.Chain) != 0 {
 			result.Chain = rStatus.Chain
 		}
-		post.Status = uint64(rStatus.Status)
+		post.Status = mongodb.GetRegisterStatus(int(rStatus.Status))
 		post.Time = rStatus.Time
 		result.Post = &post
 	}

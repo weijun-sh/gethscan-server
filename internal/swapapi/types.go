@@ -41,7 +41,7 @@ type SwapRegisterStatus struct {
 }
 
 type statusInfo struct {
-	Status uint64
+	Status string
 	Time string
 }
 
