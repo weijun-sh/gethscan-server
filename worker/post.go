@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -8,29 +9,31 @@ import (
 	"time"
 
 	"github.com/weijun-sh/gethscan-server/cmd/utils"
-	"github.com/weijun-sh/gethscan-server/mongodb"
 	"github.com/weijun-sh/gethscan-server/log"
-	"github.com/weijun-sh/gethscan-server/tokens"
+	"github.com/weijun-sh/gethscan-server/mongodb"
 	"github.com/weijun-sh/gethscan-server/rpc/client"
+	"github.com/weijun-sh/gethscan-server/tokens"
 )
 
 var (
-	rpcRetryCount = 3
-	rpcInterval = 1 * time.Second
-	postInterval = 1 * time.Second
+	rpcRetryCount   = 3
+	rpcInterval     = 1 * time.Second
+	postInterval    = 1 * time.Second
 	cachedSwapPosts *Ring
 )
 
 const (
-	postSwapSuccessResult   = "success"
-	bridgeSwapExistKeywords = "mgoError: Item is duplicate"
-	routerSwapExistResult   = "already registered"
-	routerSwapExistResultTmp   = "alreday registered"
-	httpTimeoutKeywords     = "Client.Timeout exceeded while awaiting headers"
-	errConnectionRefused    = "connect: connection refused"
-	errMaximumRequestLimit  = "You have reached maximum request limit"
-	rpcQueryErrKeywords     = "rpc query error"
+	postSwapSuccessResult          = "success"
+	bridgeSwapExistKeywords        = "mgoError: Item is duplicate"
+	routerSwapExistResult          = "already registered"
+	routerSwapExistResultTmp       = "alreday registered"
+	httpTimeoutKeywords            = "Client.Timeout exceeded while awaiting headers"
+	errConnectionRefused           = "connect: connection refused"
+	errMaximumRequestLimit         = "You have reached maximum request limit"
+	rpcQueryErrKeywords            = "rpc query error"
 	errDepositLogNotFountorRemoved = "return error: json-rpc error -32099, verify swap failed! deposit log not found or removed"
+	swapIsClosedResult             = "swap is closed"
+	swapTradeNotSupport            = "swap trade not support"
 )
 
 // StartAggregateJob aggregate job
@@ -52,12 +55,12 @@ func loopDoPostJob() {
 }
 
 func findSwapAndPost() {
-        post, err := mongodb.FindRegisterdSwap("", 0, 10)
-        if err != nil || len(post) == 0 {
-               return
+	post, err := mongodb.FindRegisterdSwap("", 0, 10)
+	if err != nil || len(post) == 0 {
+		return
 	}
-        wg := new(sync.WaitGroup)
-        wg.Add(len(post))
+	wg := new(sync.WaitGroup)
+	wg.Add(len(post))
 
 	for i, _ := range post {
 		go func(p *mongodb.MgoRegisteredSwap) {
@@ -101,7 +104,7 @@ func postBridgeSwap(post *mongodb.MgoRegisteredSwap) error {
 	return postSwapPost(swap)
 }
 
-func postSwapPost(swap *swapPost) (error) {
+func postSwapPost(swap *swapPost) error {
 	var needCached bool
 	var errPending error = errors.New("Post err")
 	for i := 0; i < rpcRetryCount; i++ {
@@ -152,6 +155,9 @@ func rpcPost(swap *swapPost) error {
 	err := client.RPCPostWithTimeoutAndID(&result, timeout, reqID, swap.swapServer, swap.rpcMethod, args)
 
 	if err != nil {
+		if checkSwapPostError(err, args) == nil {
+			return nil
+		}
 		if isRouterSwap {
 			log.Warn("post router swap failed", "swap", args, "server", swap.swapServer, "err", err)
 			return err
@@ -177,17 +183,49 @@ func rpcPost(swap *swapPost) error {
 	if status == "" {
 		err = errors.New("post router swap unmarshal result failed")
 		log.Error(err.Error(), "swap", args, "server", swap.swapServer, "result", result)
+		var resultMap map[string]interface{}
+		b, _ := json.Marshal(&result)
+		json.Unmarshal(b, &resultMap)
+		for _, value := range resultMap {
+			if strings.Contains(value.(string), routerSwapExistResult) ||
+				strings.Contains(value.(string), routerSwapExistResultTmp) {
+				log.Info("post router swap already exist", "swap", args)
+				return nil
+			}
+		}
 		return err
 	}
-	switch status {
-	case postSwapSuccessResult:
-		log.Info("post router swap success", "swap", args)
-	case routerSwapExistResult, routerSwapExistResultTmp:
-		log.Info("post router swap already exist", "swap", args)
-	default:
-		err = errors.New(status)
-		log.Info("post router swap failed", "swap", args, "server", swap.swapServer, "err", err)
+	return checkRouterStatus(status, args)
+}
+
+func checkSwapPostError(err error, args interface{}) error {
+	if strings.Contains(err.Error(), routerSwapExistResult) ||
+		strings.Contains(err.Error(), routerSwapExistResultTmp) {
+		log.Info("post swap already exist", "swap", args)
+		return nil
+	}
+	if strings.Contains(err.Error(), swapIsClosedResult) {
+		log.Info("post router swap failed, swap is closed", "swap", args)
+		return nil
+	}
+	if strings.Contains(err.Error(), swapTradeNotSupport) {
+		log.Info("post router swap failed, swap trade not support", "swap", args)
+		return nil
 	}
 	return err
 }
 
+func checkRouterStatus(status string, args interface{}) error {
+	if strings.Contains(status, postSwapSuccessResult) {
+		log.Info("post router swap success", "swap", args)
+		return nil
+	}
+	if strings.Contains(status, routerSwapExistResult) ||
+		strings.Contains(status, routerSwapExistResultTmp) {
+		log.Info("post router swap already exist", "swap", args)
+		return nil
+	}
+	err := errors.New(status)
+	log.Info("post router swap failed", "swap", args, "err", err)
+	return err
+}
