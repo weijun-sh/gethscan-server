@@ -197,12 +197,15 @@ func (scanner *ethSwapScanner) scanTransaction(txid string) {
 		return
 	}
 	if tx.To() == nil {
+		log.Info("tx to is null", "txid", txid)
+		mongodb.UpdateSwapPendingNotFound(txid)
 		return
 	}
 
 	for _, tokenCfg := range scanner.tokens {
 		verifyErr := scanner.verifyTransaction(txid, tx, tokenCfg)
 		if verifyErr == nil {
+			mongodb.UpdateSwapPendingSuccess(txid)
 			return
 		}
 	}
@@ -269,8 +272,6 @@ func (scanner *ethSwapScanner) verifyTransaction(txid string, tx *types.Transact
 		index, verifyErr = scanner.verifyAndPostRouterSwapTx(tx, receipt, tokenCfg)
 		if verifyErr == nil {
 			scanner.addRegisgerRouter(txid, index, tokenCfg)
-		} else {
-			mongodb.UpdateSwapPendingFailed(txid)
 		}
 		return verifyErr
 
@@ -294,8 +295,6 @@ func (scanner *ethSwapScanner) verifyTransaction(txid string, tx *types.Transact
 
 	if verifyErr == nil {
 		scanner.addRegisterSwap(txid, tokenCfg) // TODO
-	} else {
-		mongodb.UpdateSwapPendingFailed(txid)
 	}
 	return verifyErr
 }
@@ -322,7 +321,6 @@ func (scanner *ethSwapScanner) addRegisgerRouter(txid string, logIndex int, toke
         rpcMethod := "swap.RegisterRouterSwap"
         log.Info(subject, "chainid", chainID, "txid", txid, "logindex", logIndex)
 	mongodb.AddRegisteredSwap(scanner.chain, rpcMethod, "", txid, chainID, fmt.Sprintf("%v", logIndex), tokenCfg.SwapServer)
-	mongodb.UpdateSwapPendingSuccess(txid)
 }
 
 func (scanner *ethSwapScanner) getSwapoutFuncHashByTxType(txType string) []byte {

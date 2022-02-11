@@ -5,10 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
-	"github.com/weijun-sh/gethscan-server/cmd/utils"
 	"github.com/weijun-sh/gethscan-server/log"
 	"github.com/weijun-sh/gethscan-server/mongodb"
 	"github.com/weijun-sh/gethscan-server/rpc/client"
@@ -41,31 +39,22 @@ const (
 func StartPostJob() {
 	mongodb.MgoWaitGroup.Add(1)
 	cachedSwapPosts = NewRing(100)
-	go loopDoPostJob()
+	go loopSwapRegister()
 }
 
-func loopDoPostJob() {
-	defer mongodb.MgoWaitGroup.Done()
-	for loop := 1; ; loop++ {
-		if utils.IsCleanuping() {
-			return
+func loopSwapRegister() {
+	log.Info("start SwapRegister loop job")
+	offset := 0
+	for {
+		sp, err := mongodb.FindRegisterdSwap("", offset, 10)
+		lenPending := len(sp)
+		if err != nil || lenPending == 0 {
+			offset = 0
+			time.Sleep(20 * time.Second)
+			continue
 		}
-		findSwapAndPost()
-		time.Sleep(postInterval)
-	}
-}
-
-func findSwapAndPost() {
-	post, err := mongodb.FindRegisterdSwap("", 0, 10)
-	if err != nil || len(post) == 0 {
-		return
-	}
-	wg := new(sync.WaitGroup)
-	wg.Add(len(post))
-
-	for i, _ := range post {
-		go func(p *mongodb.MgoRegisteredSwap) {
-			defer wg.Done()
+		log.Info("loopSwapRegister", "swap", sp, "len", lenPending)
+		for _, p := range sp {
 			ok := postBridgeSwap(p)
 			if ok == nil {
 				log.Info("post Swap success", "Key", p.Key, "chainID", p.ChainID, "pairID", p.PairID, "method", p.Method, "rpc", p.SwapServer)
@@ -74,9 +63,14 @@ func findSwapAndPost() {
 				//mongodb.UpdateRegisteredSwapStatusFailed(p.Key)
 				log.Warn("post Swap fail", "Key", p.Key, "chainID", p.ChainID, "pairID", p.PairID, "method", p.Method, "rpc", p.SwapServer, "err", ok)
 			}
-		}(post[i])
+		}
+                offset += 10
+                if lenPending < 10 {
+                        offset = 0
+                        time.Sleep(10 * time.Second)
+                }
+                time.Sleep(1 * time.Second)
 	}
-	wg.Wait()
 }
 
 type swapPost struct {
