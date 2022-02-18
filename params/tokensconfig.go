@@ -1,7 +1,7 @@
 package params
 
 import (
-	"encoding/json"
+	//"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -97,13 +97,13 @@ func LoadScanTokensConfig(filePath string) *ScanTokensConfig {
 		log.Fatalf("LoadConfig error (toml DecodeFile): %v", err)
 	}
 
-	var bs []byte
-	if log.JSONFormat {
-		bs, _ = json.Marshal(config)
-	} else {
-		bs, _ = json.MarshalIndent(config, "", "  ")
-	}
-	log.Println("LoadConfig finished.", string(bs))
+	//var bs []byte
+	//if log.JSONFormat {
+	//	bs, _ = json.Marshal(config)
+	//} else {
+	//	bs, _ = json.MarshalIndent(config, "", "  ")
+	//}
+	//log.Println("LoadConfig finished.", string(bs))
 
        mongodbConfig = config.MongoDB
 	blockchainConfig = config.BlockChain

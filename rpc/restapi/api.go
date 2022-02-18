@@ -60,7 +60,7 @@ func GetHelp() *helpInfo {
 	return &helpInfo{
 		Help:"/help, method(GET)",
 		Version:"/versioninfo, method(GET)",
-		Register:"/swap/register/{chain}/{txhash}, method(POST)",
+		Register:"/swap/register/{chainid}/{txhash}, method(POST)",
 		Status:"/swap/status/{txhash}, method(GET)",
 	}
 }
@@ -242,7 +242,7 @@ func SwapoutHistoryHandler(w http.ResponseWriter, r *http.Request) {
 // RegisterSwapPendingHandler handler
 func RegisterSwapPendingHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	chain := vars["chain"]
+	chain := vars["chainid"]
 	txid := vars["txid"]
 	res, err := swapapi.RegisterSwapPending(chain, txid)
 	writeResponse(w, res, err)

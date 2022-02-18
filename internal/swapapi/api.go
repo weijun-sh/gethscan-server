@@ -385,11 +385,11 @@ func RegisterSwapPending(chain, txid string) (*PostResult, error) {
 	if !params.MustRegisterAccount() {
 		return &SuccessPostResult, nil
 	}
-	chain = strings.ToLower(chain)
+	//chain = strings.ToLower(chain)
 	txid = strings.ToLower(txid)
 	ok := params.CheckChainSupport(chain)
 	if !ok {
-		supportErr := fmt.Sprintf("chain '%v' is not support except %v", chain, params.GetChainSupport())
+		supportErr := fmt.Sprintf("chain '%v' is not support want %v", chain, params.GetChainSupport())
 		return nil, errors.New(supportErr)
 	}
 	ok = params.CheckTxID(txid)
