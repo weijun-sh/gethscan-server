@@ -11,6 +11,8 @@ Password = "test123456"
 Port = 12345
 # CORS config
 AllowedOrigins = ["*"]
+# Maximum number of parse regisgered txs per page
+MaxParseRegisteredLimit = 20
 # Maximum number of requests to limit per second
 MaxRequestsLimit = 100
 

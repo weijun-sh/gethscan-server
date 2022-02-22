@@ -420,23 +420,37 @@ func RegisterSwapStatus(txid string) (*SwapRegisterStatus, error) {
 
 	pStatus, err := mongodb.FindSwapPendingStatus(txid)
 	if err == nil {
-		var register statusInfo
+		var submit submitStatus
 		if len(pStatus.Chain) != 0 {
 			result.Chain = pStatus.Chain
 		}
-		register.Status = mongodb.GetRegisterStatus(int(pStatus.Status))
-		register.Time = pStatus.Time
-		result.Register = &register
+		submit.Status = mongodb.GetRegisterStatus(int(pStatus.Status))
+		submit.Time = pStatus.Time
+		result.Submit = &submit
 	}
 	rStatus, errR := mongodb.FindRegisteredSwapStatus(txid)
 	if errR == nil {
-		var post statusInfo
-		if len(rStatus.Chain) != 0 {
-			result.Chain = rStatus.Chain
+		if len(rStatus.PairID) != 0 { // bridge
+			var post postBridgeStatus
+			post.Pairid = rStatus.PairID
+			post.RpcMethod = rStatus.Method
+			post.Status = mongodb.GetRegisterStatus(int(rStatus.Status))
+			post.Time = rStatus.Time
+			result.Register = &post
+			if len(rStatus.Chain) != 0 {
+				result.Chain = rStatus.Chain
+			}
+		} else {
+			var post postRouterStatus
+			post.LogIndex = fmt.Sprintf("%v", rStatus.LogIndex)
+			post.RpcMethod = rStatus.Method
+			post.Status = mongodb.GetRegisterStatus(int(rStatus.Status))
+			post.Time = rStatus.Time
+			result.Register = &post
+			if rStatus.ChainID != 0 {
+				result.Chain = fmt.Sprintf("%v", rStatus.ChainID)
+			}
 		}
-		post.Status = mongodb.GetRegisterStatus(int(rStatus.Status))
-		post.Time = rStatus.Time
-		result.Post = &post
 	}
 	log.Info("[api] register swap status", "txid", txid, "result", result)
 	return &result, nil

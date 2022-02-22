@@ -36,12 +36,26 @@ type ServerInfo struct {
 type SwapRegisterStatus struct {
 	Chain string
 	Txid string
-	Register *statusInfo
-	Post *statusInfo
+	Submit *submitStatus
+	Register interface{}
 }
 
-type statusInfo struct {
+type submitStatus struct {
 	Status string
+	Time string
+}
+
+type postBridgeStatus struct {
+	Status string
+	Pairid string
+	RpcMethod string
+	Time string
+}
+
+type postRouterStatus struct {
+	Status string
+	LogIndex string
+	RpcMethod string
 	Time string
 }
 
