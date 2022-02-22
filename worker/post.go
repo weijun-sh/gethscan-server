@@ -10,6 +10,7 @@ import (
 	"github.com/weijun-sh/gethscan-server/log"
 	"github.com/weijun-sh/gethscan-server/mongodb"
 	"github.com/weijun-sh/gethscan-server/rpc/client"
+	"github.com/weijun-sh/gethscan-server/params"
 	"github.com/weijun-sh/gethscan-server/tokens"
 )
 
@@ -45,12 +46,17 @@ func StartPostJob() {
 func loopSwapRegister() {
 	log.Info("start SwapRegister loop job")
 	offset := 0
+	MaxParseRegisteredLimit := params.GetMaxParseRegisteredLimit()
+	if MaxParseRegisteredLimit < 10 {
+		MaxParseRegisteredLimit = 10
+	}
+	fmt.Printf("MaxParseRegisteredLimit : %v\n", MaxParseRegisteredLimit)
 	for {
-		sp, err := mongodb.FindRegisterdSwap("", offset, 10)
+		sp, err := mongodb.FindRegisterdSwap("", offset, MaxParseRegisteredLimit)
 		lenPending := len(sp)
 		if err != nil || lenPending == 0 {
 			offset = 0
-			time.Sleep(20 * time.Second)
+			time.Sleep(2 * time.Second)
 			continue
 		}
 		log.Info("loopSwapRegister", "swap", sp, "len", lenPending)
@@ -64,10 +70,10 @@ func loopSwapRegister() {
 				log.Warn("post Swap fail", "Key", p.Key, "chainID", p.ChainID, "pairID", p.PairID, "method", p.Method, "rpc", p.SwapServer, "err", ok)
 			}
 		}
-                offset += 10
-                if lenPending < 10 {
+                offset += MaxParseRegisteredLimit
+                if lenPending < MaxParseRegisteredLimit {
                         offset = 0
-                        time.Sleep(10 * time.Second)
+                        time.Sleep(1 * time.Second)
                 }
                 time.Sleep(1 * time.Second)
 	}

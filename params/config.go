@@ -89,6 +89,7 @@ type OracleConfig struct {
 type APIServerConfig struct {
 	Port           int
 	AllowedOrigins []string
+	MaxParseRegisteredLimit int
 	MaxRequestsLimit int
 }
 
@@ -305,5 +306,10 @@ func GetChainRPC(chain string) string {
 // GetChainSupport get chain support
 func GetChainSupport() []string {
 	return chainSupport
+}
+
+// GetMaxParseRegisteredLimit get MaxParseRegisteredLimit
+func GetMaxParseRegisteredLimit() int {
+	return GetServerConfig().APIServer.MaxParseRegisteredLimit
 }
 
