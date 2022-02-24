@@ -64,6 +64,7 @@ type PostResult string
 
 // SuccessPostResult success post result
 var SuccessPostResult PostResult = "Success"
+var FailedPostResult PostResult = "Failed"
 
 // SwapInfo swap info
 type SwapInfo struct {

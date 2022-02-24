@@ -12,7 +12,9 @@ import (
 	"github.com/weijun-sh/gethscan-server/log"
 	"github.com/weijun-sh/gethscan-server/mongodb"
 	"github.com/weijun-sh/gethscan-server/params"
+	"github.com/weijun-sh/gethscan-server/worker"
 	"github.com/weijun-sh/gethscan-server/tokens"
+	"github.com/weijun-sh/gethscan-server/tokens/eth"
 	"github.com/weijun-sh/gethscan-server/tokens/btc"
 )
 
@@ -402,6 +404,32 @@ func RegisterSwapPending(chain, txid string) (*PostResult, error) {
 	}
 	log.Info("[api] register swap pending", "chain", chain, "txid", txid)
 	return &SuccessPostResult, nil
+}
+
+func BuildRegisterSwap(chain, txid string) error {
+	//chain = strings.ToLower(chain)
+	txid = strings.ToLower(txid)
+	ok := params.CheckChainSupport(chain)
+	if !ok {
+		supportErr := fmt.Sprintf("chain '%v' is not support want %v", chain, params.GetChainSupport())
+		return errors.New(supportErr)
+	}
+	ok = params.CheckTxID(txid)
+	if !ok {
+		return errors.New("tx format error")
+	}
+	err := mongodb.AddRegisteredSwapPending(chain, txid)
+	if err != nil {
+		return err
+	}
+	eth.ParseTx(chain, txid)
+	post, err := mongodb.FindRegisterdSwapTxid(txid)
+	if err != nil {
+		return err
+	}
+	worker.PostBridgeSwap(post)
+	log.Info("[api] register swap pending", "chain", chain, "txid", txid)
+	return nil
 }
 
 // RegisterSwapStatus register Swap for ETH like chain

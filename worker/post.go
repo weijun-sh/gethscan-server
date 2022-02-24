@@ -61,14 +61,7 @@ func loopSwapRegister() {
 		}
 		log.Info("loopSwapRegister", "swap", sp, "len", lenPending)
 		for _, p := range sp {
-			ok := postBridgeSwap(p)
-			if ok == nil {
-				log.Info("post Swap success", "Key", p.Key, "chainID", p.ChainID, "pairID", p.PairID, "method", p.Method, "rpc", p.SwapServer)
-				mongodb.UpdateRegisteredSwapStatusSuccess(p.Key)
-			} else {
-				//mongodb.UpdateRegisteredSwapStatusFailed(p.Key)
-				log.Warn("post Swap fail", "Key", p.Key, "chainID", p.ChainID, "pairID", p.PairID, "method", p.Method, "rpc", p.SwapServer, "err", ok)
-			}
+			PostBridgeSwap(p)
 		}
                 offset += MaxParseRegisteredLimit
                 if lenPending < MaxParseRegisteredLimit {
@@ -76,6 +69,17 @@ func loopSwapRegister() {
                         time.Sleep(1 * time.Second)
                 }
                 time.Sleep(1 * time.Second)
+	}
+}
+
+func PostBridgeSwap(p *mongodb.MgoRegisteredSwap) {
+	ok := postBridgeSwap(p)
+	if ok == nil {
+		log.Info("post Swap success", "Key", p.Key, "chainID", p.ChainID, "pairID", p.PairID, "method", p.Method, "rpc", p.SwapServer)
+		mongodb.UpdateRegisteredSwapStatusSuccess(p.Key)
+	} else {
+		//mongodb.UpdateRegisteredSwapStatusFailed(p.Key)
+		log.Warn("post Swap fail", "Key", p.Key, "chainID", p.ChainID, "pairID", p.PairID, "method", p.Method, "rpc", p.SwapServer, "err", ok)
 	}
 }
 

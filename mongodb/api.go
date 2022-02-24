@@ -711,6 +711,15 @@ func FindRegisterdSwap(chain string, offset, limit int) ([]*MgoRegisteredSwap, e
 	return result, nil
 }
 
+func FindRegisterdSwapTxid(txid string) (*MgoRegisteredSwap, error) {
+	var result MgoRegisteredSwap
+	err := collRegisteredSwap.Find(bson.M{"_id": txid}).One(&result)
+	if err != nil {
+		return nil, mgoError(err)
+	}
+	return &result, nil
+}
+
 func FindSwapPending(chain string, offset, limit int) ([]*MgoRegisteredSwapPending, error) {
 	result := make([]*MgoRegisteredSwapPending, 0, limit)
 	qchain := bson.M{"chain": chain}
@@ -725,6 +734,15 @@ func FindSwapPending(chain string, offset, limit int) ([]*MgoRegisteredSwapPendi
 		return nil, mgoError(err)
 	}
 	return result, nil
+}
+
+func FindSwapPendingTxid(txid string) (*MgoRegisteredSwapPending, error) {
+	var result MgoRegisteredSwapPending
+	err := collRegisteredSwapPending.Find(bson.M{"_id": txid}).One(&result)
+	if err != nil {
+		return nil, mgoError(err)
+	}
+	return &result, nil
 }
 
 // ------------------ latest scan info ------------------------

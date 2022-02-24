@@ -534,6 +534,7 @@ func FindSwapPendingAndRegister() {
 			defer wg.Done()
 			chain := p.Chain
 			txid := p.Key
+			ParseTx(chain, txid)
 			scanner := GetChainScanner(chain)
 			if scanner == nil {
 				log.Info("FindSwapPendingAndRegister", "txid", txid, "(not set rpc)chain", chain)
@@ -546,3 +547,12 @@ func FindSwapPendingAndRegister() {
 	wg.Wait()
 }
 
+func ParseTx(chain, txid string) {
+	scanner := GetChainScanner(chain)
+	if scanner == nil {
+		log.Info("FindSwapPendingAndRegister", "txid", txid, "(not set rpc)chain", chain)
+		return
+	}
+	log.Info("FindSwapPendingAndRegister", "txid", txid, "chain", chain)
+	scanner.scanTransaction(txid)
+}
