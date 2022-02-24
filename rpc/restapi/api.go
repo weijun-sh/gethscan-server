@@ -246,11 +246,11 @@ func RegisterSwapPendingHandler(w http.ResponseWriter, r *http.Request) {
 	txid := vars["txid"]
 	err := swapapi.BuildRegisterSwap(chain, txid)
 	if err == nil {
-		res, err := swapapi.RegisterSwapStatus(txid)
-		writeResponse(w, res, err)
+		res := &swapapi.SuccessPostResult
+		writeResponse(w, res, nil)
 	} else {
-		res := &swapapi.FailedPostResult
-		writeResponse(w, res, err)
+		var res swapapi.PostResult = swapapi.PostResult(err.Error())
+		writeResponse(w, &res, nil)
 	}
 }
 

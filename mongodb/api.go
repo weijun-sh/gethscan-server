@@ -826,7 +826,7 @@ func AddRegisteredSwapPending(chain, txid string) error {
 	} else {
 		log.Debug("mongodb add register swap pending", "txid", ma.Key, "chain", chain, "err", err)
 	}
-	return mgoError(err)
+	return err
 }
 
 // AddRegisteredSwap add register swap

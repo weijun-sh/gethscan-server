@@ -418,12 +418,19 @@ func BuildRegisterSwap(chain, txid string) error {
 	if !ok {
 		return errors.New("tx format error")
 	}
-	err := mongodb.AddRegisteredSwapPending(chain, txid)
+	post, err := mongodb.FindRegisterdSwapTxid(txid)
+	if err == nil {
+		return errors.New("already register")
+	}
+	err = eth.ParseTx(chain, txid)
 	if err != nil {
 		return err
 	}
-	eth.ParseTx(chain, txid)
-	post, err := mongodb.FindRegisterdSwapTxid(txid)
+	err = mongodb.AddRegisteredSwapPending(chain, txid)
+	if err != nil {
+		return err
+	}
+	post, err = mongodb.FindRegisterdSwapTxid(txid)
 	if err != nil {
 		return err
 	}
