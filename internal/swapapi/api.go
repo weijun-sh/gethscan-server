@@ -420,13 +420,10 @@ func BuildRegisterSwap(chain, txid string) error {
 	}
 	post, err := mongodb.FindRegisterdSwapTxid(txid)
 	if err == nil {
-		return errors.New("already register")
+		ret := fmt.Sprintf("%v", post.Status)
+		return errors.New(ret)
 	}
 	err = eth.ParseTx(chain, txid)
-	if err != nil {
-		return err
-	}
-	err = mongodb.AddRegisteredSwapPending(chain, txid)
 	if err != nil {
 		return err
 	}
@@ -434,9 +431,15 @@ func BuildRegisterSwap(chain, txid string) error {
 	if err != nil {
 		return err
 	}
-	worker.PostBridgeSwap(post)
-	log.Info("[api] register swap pending", "chain", chain, "txid", txid)
-	return nil
+	log.Info("[api] BuildRegisterSwap", "chain", chain, "txid", txid)
+	err1, err2 :=  worker.PostBridgeSwap(post)
+	if err1 != nil {
+		err = mongodb.AddRegisteredSwapPending(chain, txid)
+		//if err != nil {
+		//	return err
+		//}
+	}
+	return err2
 }
 
 // RegisterSwapStatus register Swap for ETH like chain
@@ -453,23 +456,23 @@ func RegisterSwapStatus(txid string) (*SwapRegisterStatus, error) {
 	var result SwapRegisterStatus
 	result.Txid = txid
 
-	pStatus, err := mongodb.FindSwapPendingStatus(txid)
-	if err == nil {
-		var submit submitStatus
-		if len(pStatus.Chain) != 0 {
-			result.Chain = pStatus.Chain
-		}
-		submit.Status = mongodb.GetRegisterStatus(int(pStatus.Status))
-		submit.Time = pStatus.Time
-		result.Submit = &submit
-	}
+	//pStatus, err := mongodb.FindSwapPendingStatus(txid)
+	//if err == nil {
+	//	var submit submitStatus
+	//	if len(pStatus.Chain) != 0 {
+	//		result.Chain = pStatus.Chain
+	//	}
+	//	submit.Status = pStatus.Status
+	//	submit.Time = pStatus.Time
+	//	result.Submit = &submit
+	//}
 	rStatus, errR := mongodb.FindRegisteredSwapStatus(txid)
 	if errR == nil {
 		if len(rStatus.PairID) != 0 { // bridge
 			var post postBridgeStatus
 			post.Pairid = rStatus.PairID
 			post.RpcMethod = rStatus.Method
-			post.Status = mongodb.GetRegisterStatus(int(rStatus.Status))
+			post.Status = rStatus.Status
 			post.Time = rStatus.Time
 			result.Register = &post
 			if len(rStatus.Chain) != 0 {
@@ -479,7 +482,7 @@ func RegisterSwapStatus(txid string) (*SwapRegisterStatus, error) {
 			var post postRouterStatus
 			post.LogIndex = fmt.Sprintf("%v", rStatus.LogIndex)
 			post.RpcMethod = rStatus.Method
-			post.Status = mongodb.GetRegisterStatus(int(rStatus.Status))
+			post.Status = rStatus.Status
 			post.Time = rStatus.Time
 			result.Register = &post
 			if rStatus.ChainID != 0 {

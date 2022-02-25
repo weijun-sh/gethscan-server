@@ -72,15 +72,22 @@ func loopSwapRegister() {
 	}
 }
 
-func PostBridgeSwap(p *mongodb.MgoRegisteredSwap) {
-	ok := postBridgeSwap(p)
+func PostBridgeSwap(p *mongodb.MgoRegisteredSwap) (error, error) {
+	ok, err := postBridgeSwap(p)
 	if ok == nil {
-		log.Info("post Swap success", "Key", p.Key, "chainID", p.ChainID, "pairID", p.PairID, "method", p.Method, "rpc", p.SwapServer)
-		mongodb.UpdateRegisteredSwapStatusSuccess(p.Key)
+		if err == nil {
+			log.Info("post Swap success", "Key", p.Key, "chainID", p.ChainID, "pairID", p.PairID, "method", p.Method, "rpc", p.SwapServer)
+			mongodb.UpdateRegisteredSwapStatusSuccess(p.Key)
+		} else {
+			log.Info("post Swap finished", "Key", p.Key, "chainID", p.ChainID, "pairID", p.PairID, "method", p.Method, "rpc", p.SwapServer, "err", err)
+			mongodb.UpdateRegisteredSwapStatus(p.Key, err.Error())
+		}
+		return ok, err
 	} else {
 		//mongodb.UpdateRegisteredSwapStatusFailed(p.Key)
 		log.Warn("post Swap fail", "Key", p.Key, "chainID", p.ChainID, "pairID", p.PairID, "method", p.Method, "rpc", p.SwapServer, "err", ok)
 	}
+	return err, nil
 }
 
 type swapPost struct {
@@ -97,7 +104,7 @@ type swapPost struct {
 	logIndex string
 }
 
-func postBridgeSwap(post *mongodb.MgoRegisteredSwap) error {
+func postBridgeSwap(post *mongodb.MgoRegisteredSwap) (error, error) {
 	swap := &swapPost{
 		txid:       post.Key,
 		pairID:     post.PairID,
@@ -109,13 +116,13 @@ func postBridgeSwap(post *mongodb.MgoRegisteredSwap) error {
 	return postSwapPost(swap)
 }
 
-func postSwapPost(swap *swapPost) error {
+func postSwapPost(swap *swapPost) (error, error) {
 	var needCached bool
 	var errPending error = errors.New("Post err")
 	for i := 0; i < rpcRetryCount; i++ {
-		err := rpcPost(swap)
-		if err == nil {
-			return nil
+		ok, err := rpcPost(swap)
+		if ok == nil {
+			return nil, err
 		}
 		log.Warn("postSwapPost", "err", err)
 		if errors.Is(err, tokens.ErrTxNotFound) ||
@@ -132,10 +139,10 @@ func postSwapPost(swap *swapPost) error {
 		log.Warn("cache swap", "swap", swap)
 		cachedSwapPosts.Add(swap)
 	}
-	return errPending
+	return errPending, nil
 }
 
-func rpcPost(swap *swapPost) error {
+func rpcPost(swap *swapPost) (error, error) {
 	var isRouterSwap bool
 	var args interface{}
 	if swap.pairID != "" {
@@ -151,7 +158,7 @@ func rpcPost(swap *swapPost) error {
 			"logindex": swap.logIndex,
 		}
 	} else {
-		return fmt.Errorf("wrong swap post item %v", swap)
+		return nil, errors.New("wrong swap post item")
 	}
 
 	timeout := 300
@@ -160,25 +167,32 @@ func rpcPost(swap *swapPost) error {
 	err := client.RPCPostWithTimeoutAndID(&result, timeout, reqID, swap.swapServer, swap.rpcMethod, args)
 
 	if err != nil {
-		if checkSwapPostError(err, args) == nil {
-			return nil
+		errmsg := fmt.Sprintf("%v", err)
+		if strings.Contains(errmsg, ", ") {
+			slice := strings.Split(errmsg, ", ")
+			errmsg = slice[1]
+		}
+		err = errors.New(errmsg)
+		ok, err1 := checkSwapPostError(err, args)
+		if ok == nil {
+			return nil, err1
 		}
 		if isRouterSwap {
 			log.Warn("post router swap failed", "swap", args, "server", swap.swapServer, "err", err)
-			return err
+			return err, nil
 		}
 		if strings.Contains(err.Error(), bridgeSwapExistKeywords) {
-			err = nil // ignore this kind of error
 			log.Info("post bridge swap already exist", "swap", args)
+			return nil, err
 		} else {
 			log.Warn("post bridge swap failed", "swap", args, "server", swap.swapServer, "err", err)
+			return err, nil
 		}
-		return err
 	}
 
 	if !isRouterSwap {
 		log.Info("post bridge swap success", "swap", args)
-		return nil
+		return nil, nil
 	}
 
 	var status string
@@ -195,46 +209,46 @@ func rpcPost(swap *swapPost) error {
 			if strings.Contains(value.(string), routerSwapExistResult) ||
 				strings.Contains(value.(string), routerSwapExistResultTmp) {
 				log.Info("post router swap already exist", "swap", args)
-				return nil
+				return nil, nil
 			}
 		}
-		return err
+		return err, nil
 	}
 	return checkRouterStatus(status, args)
 }
 
-func checkSwapPostError(err error, args interface{}) error {
+func checkSwapPostError(err error, args interface{}) (error, error) {
 	if strings.Contains(err.Error(), routerSwapExistResult) ||
 		strings.Contains(err.Error(), routerSwapExistResultTmp) {
 		log.Info("post swap already exist", "swap", args)
-		return nil
+		return nil, err
 	}
 	if strings.Contains(err.Error(), swapIsClosedResult) {
 		log.Info("post router swap failed, swap is closed", "swap", args)
-		return nil
+		return nil, err
 	}
 	if strings.Contains(err.Error(), swapTradeNotSupport) {
 		log.Info("post router swap failed, swap trade not support", "swap", args)
-		return nil
+		return nil, err
 	}
-	return err
+	return err, nil
 }
 
-func checkRouterStatus(status string, args interface{}) error {
+func checkRouterStatus(status string, args interface{}) (error, error) {
 	if strings.Contains(status, postSwapSuccessResult) {
 		log.Info("post router swap success", "swap", args)
-		return nil
+		return nil, nil
 	}
 	if strings.Contains(status, routerSwapExistResult) ||
 		strings.Contains(status, routerSwapExistResultTmp) {
 		log.Info("post router swap already exist", "swap", args)
-		return nil
+		return nil, errors.New(routerSwapExistResult)
 	}
 	if strings.Contains(status, txWithWrongContract) {
 		log.Info("post router swap failed, tx with wrong contract", "swap", args)
-		return nil
+		return nil, errors.New(txWithWrongContract)
 	}
 	err := errors.New(status)
 	log.Info("post router swap failed", "swap", args, "err", err)
-	return err
+	return err, nil
 }

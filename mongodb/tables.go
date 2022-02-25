@@ -98,7 +98,7 @@ type MgoRegisteredSwap struct {
 	SwapServer string `bson:"swapserver"`
 	Chain      string `bson:"chain"`
 	ChainID    uint64 `bson:"chainid"`
-	Status     uint8  `bson:"status"`
+	Status     string `bson:"status"`
 	Timestamp  int64  `bson:"timestamp"`
 	Time       string `bson:"time"`
 }
@@ -107,7 +107,7 @@ type MgoRegisteredSwap struct {
 type MgoRegisteredSwapPending struct {
 	Key        string `bson:"_id"`
 	Chain      string `bson:"chain"`
-	Status     uint8  `bson:"status"`
+	Status     string `bson:"status"`
 	Timestamp  int64  `bson:"timestamp"`
 	Time       string `bson:"time"`
 }

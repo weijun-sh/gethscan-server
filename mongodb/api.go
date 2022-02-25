@@ -21,12 +21,10 @@ const (
 )
 
 const (
-	SwapSuccess = iota//find and success post
-	NewRegister // new
-	SwapNotFound
-	SwapMoreTime // rpc error, find next time after 10 min
-	SwapError //found but error
-	SwapNotRegister = 400 // not register
+	SwapSuccess string = "success" //find and success post
+	NewRegister string = "new"// new
+	SwapError string = "failed"
+	SwapNotFound string = "swap not found"
 )
 
 var (
@@ -35,15 +33,6 @@ var (
 
 	RegisterStatus map[int]string = make(map[int]string)
 )
-
-func init() {
-	RegisterStatus[SwapSuccess] = "success"
-	RegisterStatus[NewRegister] = "new"
-	RegisterStatus[SwapNotFound] = "tx not found"
-	RegisterStatus[SwapMoreTime] = "rpc error, find next time"
-	RegisterStatus[SwapError] = "tx found but check error"
-	RegisterStatus[SwapNotRegister] = "tx not register"
-}
 
 func GetRegisterStatus(status int) string {
 	return RegisterStatus[status]
@@ -857,7 +846,7 @@ func AddRegisteredSwap(chain, method, pairid, txid, chainid, logIndex, swapServe
 
 // UpdateRegisteredSwapStatus update register swap status
 func UpdateRegisteredSwapStatusSuccess(txid string) error {
-	status := SwapSuccess
+	status := "success"
 	return UpdateRegisteredSwapStatus(txid, status)
 }
 
@@ -866,7 +855,7 @@ func UpdateRegisteredSwapStatusFailed(txid string) error {
 	return UpdateRegisteredSwapStatus(txid, status)
 }
 
-func UpdateRegisteredSwapStatus(txid string, status int) error {
+func UpdateRegisteredSwapStatus(txid string, status string) error {
 	now := time.Now()
 	Time := fmt.Sprintf(now.Format("2006-01-02 15:04:05"))
 	selector := bson.M{"_id": txid}
@@ -882,7 +871,7 @@ func UpdateSwapPendingSuccess(txid string) error {
 }
 
 // UpdateSwapPendingStatus update register swap status
-func UpdateSwapPendingStatus(txid string, status int) error {
+func UpdateSwapPendingStatus(txid string, status string) error {
 	selector := bson.M{"_id": txid}
 	data := bson.M{"$set": bson.M{"status": status}}
 	err := collRegisteredSwapPending.Update(selector, data)

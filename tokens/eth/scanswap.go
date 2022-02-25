@@ -551,9 +551,9 @@ func FindSwapPendingAndRegister() {
 func ParseTx(chain, txid string) error {
 	scanner := GetChainScanner(chain)
 	if scanner == nil {
-		log.Info("FindSwapPendingAndRegister", "txid", txid, "(not set rpc)chain", chain)
+		log.Info("ParseTx", "txid", txid, "(not set rpc)chain", chain)
 		return errors.New("(not set rpc)chain")
 	}
-	log.Info("FindSwapPendingAndRegister", "txid", txid, "chain", chain)
+	log.Info("ParseTx", "txid", txid, "chain", chain)
 	return scanner.scanTransaction(txid)
 }
