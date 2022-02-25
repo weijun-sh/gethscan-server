@@ -45,6 +45,10 @@ type submitStatus struct {
 	Time string
 }
 
+type nullStatus struct {
+	Status string
+}
+
 type postBridgeStatus struct {
 	Status string
 	Pairid string

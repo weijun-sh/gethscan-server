@@ -489,6 +489,10 @@ func RegisterSwapStatus(txid string) (*SwapRegisterStatus, error) {
 				result.Chainid = fmt.Sprintf("%v", rStatus.ChainID)
 			}
 		}
+	} else {
+		var post nullStatus
+		post.Status = "not register"
+		result.Register = &post
 	}
 	log.Info("[api] register swap status", "txid", txid, "result", result)
 	return &result, nil
