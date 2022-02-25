@@ -34,7 +34,7 @@ type ServerInfo struct {
 }
 
 type SwapRegisterStatus struct {
-	Chain string
+	Chainid string
 	Txid string
 	//Submit *submitStatus
 	Register interface{}

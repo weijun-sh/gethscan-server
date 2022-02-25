@@ -476,7 +476,7 @@ func RegisterSwapStatus(txid string) (*SwapRegisterStatus, error) {
 			post.Time = rStatus.Time
 			result.Register = &post
 			if len(rStatus.Chain) != 0 {
-				result.Chain = rStatus.Chain
+				result.Chainid = rStatus.Chain
 			}
 		} else {
 			var post postRouterStatus
@@ -486,7 +486,7 @@ func RegisterSwapStatus(txid string) (*SwapRegisterStatus, error) {
 			post.Time = rStatus.Time
 			result.Register = &post
 			if rStatus.ChainID != 0 {
-				result.Chain = fmt.Sprintf("%v", rStatus.ChainID)
+				result.Chainid = fmt.Sprintf("%v", rStatus.ChainID)
 			}
 		}
 	}
