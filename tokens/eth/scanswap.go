@@ -194,12 +194,12 @@ func (scanner *ethSwapScanner) scanTransaction(txid string) error {
 	if err != nil {
 		log.Info("tx not found", "txid", txid)
 		mongodb.UpdateSwapPendingNotFound(txid)
-		return errors.New("tx not found")
+		return errors.New("verify swap failed! tx not found")
 	}
 	if tx.To() == nil {
 		log.Info("tx to is null", "txid", txid)
 		mongodb.UpdateSwapPendingNotFound(txid)
-		return errors.New("tx to is null")
+		return errors.New("verify swap failed! tx to is null")
 	}
 
 	for _, tokenCfg := range scanner.tokens {
@@ -210,8 +210,9 @@ func (scanner *ethSwapScanner) scanTransaction(txid string) error {
 		}
 	}
 	mongodb.UpdateSwapPendingFailed(txid)
-	log.Debug("verify tx failed", "txHash", txid, "err", err)
-	return err
+	log.Debug("verify swap failed", "txHash", txid, "err", err)
+	ret := fmt.Sprintf("verify swap failed! %v", err)
+	return errors.New(ret)
 }
 
 func (scanner *ethSwapScanner) checkTxToAddress(tx *types.Transaction, tokenCfg *params.TokenConfig) (receipt *types.Receipt, isAcceptToAddr bool) {
