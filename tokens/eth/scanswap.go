@@ -203,15 +203,15 @@ func (scanner *ethSwapScanner) scanTransaction(txid string) error {
 	}
 
 	for _, tokenCfg := range scanner.tokens {
-		verifyErr := scanner.verifyTransaction(txid, tx, tokenCfg)
-		if verifyErr == nil {
+		err = scanner.verifyTransaction(txid, tx, tokenCfg)
+		if err == nil {
 			mongodb.UpdateSwapPendingSuccess(txid)
 			return nil
 		}
 	}
 	mongodb.UpdateSwapPendingFailed(txid)
-	log.Debug("verify tx failed", "txHash", txid, "err", tokens.ErrUnknownSwapType)
-	return errors.New("verify tx failed")
+	log.Debug("verify tx failed", "txHash", txid, "err", err)
+	return err
 }
 
 func (scanner *ethSwapScanner) checkTxToAddress(tx *types.Transaction, tokenCfg *params.TokenConfig) (receipt *types.Receipt, isAcceptToAddr bool) {

@@ -427,11 +427,11 @@ func BuildRegisterSwap(chain, txid string) error {
 	if err != nil {
 		return err
 	}
+	log.Info("[api] BuildRegisterSwap", "chain", chain, "txid", txid)
 	post, err = mongodb.FindRegisterdSwapTxid(txid)
 	if err != nil {
 		return err
 	}
-	log.Info("[api] BuildRegisterSwap", "chain", chain, "txid", txid)
 	err1, err2 :=  worker.PostBridgeSwap(post)
 	if err1 != nil {
 		err = mongodb.AddRegisteredSwapPending(chain, txid)

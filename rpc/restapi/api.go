@@ -239,16 +239,18 @@ func SwapoutHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// RegisterSwapPendingHandler handler
-func RegisterSwapPendingHandler(w http.ResponseWriter, r *http.Request) {
+// RegisterSwapHandler handler
+func RegisterSwapHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	chain := vars["chainid"]
 	txid := vars["txid"]
 	err := swapapi.BuildRegisterSwap(chain, txid)
 	if err == nil {
+		log.Info("[api] RegisterSwapHandler success", "chain", chain, "txid", txid)
 		res := &swapapi.SuccessPostResult
 		writeResponse(w, res, nil)
 	} else {
+		log.Info("[api] RegisterSwapHandler", "chain", chain, "txid", txid, "err", err)
 		var res swapapi.PostResult = swapapi.PostResult(err.Error())
 		writeResponse(w, &res, nil)
 	}
@@ -262,8 +264,8 @@ func SwapStatusHandler(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, res, err)
 }
 
-// RegisterSwapHandler handler
-func RegisterSwapHandler(w http.ResponseWriter, r *http.Request) {
+// RegisterSwapPostHandler handler
+func RegisterSwapPostHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	pairid := vars["pairid"]
 	txid := vars["txid"]
